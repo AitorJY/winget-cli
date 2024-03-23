@@ -1,5 +1,5 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: Mirror to Bitbucket
+run-name: ${{ github.actor }} is mirroring to bitbucket
 on: [push]
 jobs:
   Mirror-to-Bitbucket-actions:
