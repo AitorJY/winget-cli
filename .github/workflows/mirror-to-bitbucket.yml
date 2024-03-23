@@ -13,4 +13,5 @@ jobs:
             REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
             GIT_USERNAME: AitorJimenez
             GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+            GIT_PUSH_ARGS: "--tags --force"
 
