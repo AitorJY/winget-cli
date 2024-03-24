@@ -51,10 +51,10 @@ jobs:
       - name: New commits found sync to Bitbucket
         if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
         uses: yesolutions/mirror-action@master
-          with:
-            REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
-            GIT_USERNAME: AitorJimenez
-            GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-            GIT_PUSH_ARGS: "--tags --force"
-            PUSH_ALL_REFS: false
-            GIT_REF: refs/heads/master
+        with:
+          REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
+          GIT_USERNAME: AitorJimenez
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+          GIT_PUSH_ARGS: "--tags --force"
+          PUSH_ALL_REFS: false
+          GIT_REF: refs/heads/master
