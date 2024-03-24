@@ -2,7 +2,8 @@ name: GitHub Actions Sync
 run-name: ${{ github.actor }} is syncing with main repo
 
 on:
-  push:
+  schedule:
+    -cron: '1 * * * *'
 
   workflow_dispatch:
     branches:
