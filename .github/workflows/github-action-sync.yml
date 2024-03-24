@@ -22,6 +22,7 @@ jobs:
     steps:
       - name: Checkout target repo
         uses: actions/checkout@v4
+        ref: 'master'
 
       - name: Sync upstream changes
         id: sync
