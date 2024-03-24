@@ -53,7 +53,7 @@ jobs:
         if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
         uses: chachako/checkout-tags@v1.0.80
         with:
-          base-repository: microsoft/winget-cli
+          base: microsoft/winget-cli
 
       - name: New commits found sync to Bitbucket
         if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
