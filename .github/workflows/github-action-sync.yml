@@ -10,7 +10,6 @@ on:
     inputs:
       force_push:
         description: Force pushes the repo to Bitbucket regardles of new commits
-        default: 'false'
 env:
   FORCE_PUSH_UPDATE: ${{ github.event.inputs.force_push == '' && github.event.inputs.force_push || 'false' }}
 
