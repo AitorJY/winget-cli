@@ -10,9 +10,9 @@ on:
     inputs:
       forcePush:
         description: Force pushes the repo to Bitbucket regardles of new commits
-        default: 'falseInput'
+        default: 'false'
 env:
-  FORCE_PUSH_UPDATE: ${{ inputs.forcePush == '' && inputs.forcePush || 'false' }}
+  FORCE_PUSH_UPDATE: ${{ inputs.forcePush != '' && inputs.forcePush || 'false' }}
 
 jobs:
   sync_latest_from_upstream:
