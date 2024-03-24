@@ -8,10 +8,11 @@ on:
     branches:
       - master
     inputs:
-      force_push:
+      forcePush:
         description: Force pushes the repo to Bitbucket regardles of new commits
+        default: 'falseInput'
 env:
-  FORCE_PUSH_UPDATE: ${{ github.event.inputs.force_push == '' && github.event.inputs.force_push || 'false' }}
+  FORCE_PUSH_UPDATE: ${{ inputs.forcePush == '' && inputs.forcePush || 'false' }}
 
 jobs:
   sync_latest_from_upstream:
