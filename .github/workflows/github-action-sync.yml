@@ -20,6 +20,9 @@ jobs:
     name: Sync latest commits from upstream repo
     
     steps:
+      - name: Print env force push
+        run: echo "Environment FORCE_PUSH_UPDATE ${{ env.FORCE_PUSH_UPDATE }}."
+
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
