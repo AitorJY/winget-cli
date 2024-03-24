@@ -1,19 +1,60 @@
 name: GitHub Actions Sync
 run-name: ${{ github.actor }} is syncing with repo
-on: [push]
-jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
 
+on:
+  workflow_dispatch:
+    branches:
+      - master
+    inputs:
+      force_push:
+        description: Force pushes the repo to Bitbucket regardles of new commits
+        default: 'false'
+env:
+  FORCE_PUSH_UPDATE: ${{ github.event.inputs.force_push == '' && github.event.inputs.force_push || 'false' }}
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    name: Sync latest commits from upstream repo
+    
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          target_sync_branch: master
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_branch: master
+          upstream_sync_repo: microsoft/winget-cli
+
+      - name: No new commits
+        if: steps.sync.outputs.has_new_commits == 'false'
+        run: echo "There were no new commits."
+
+      - name: New commits found
+        if: steps.sync.outputs.has_new_commits == 'true'
+        run: echo "New commits were found to sync, syncing tags and to github."
+
+      - name: Force activated
+        if: env.FORCE_PUSH_UPDATE == 'true'
+        run: echo "Force push is enabled, the fork will update tags and update bitbucket regardless of new commits"
+
+      - name: Sync from upstream to fork
+        if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
+        uses: chachako/tags-sync@v1
+        with:
+          base-repository: microsoft/winget-cli
+
+      - name: New commits found sync to Bitbucket
+        if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
+        uses: yesolutions/mirror-action@master
+          with:
+            REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
+            GIT_USERNAME: AitorJimenez
+            GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+            GIT_PUSH_ARGS: "--tags --force"
+            PUSH_ALL_REFS: false
+            GIT_REF: refs/heads/master
