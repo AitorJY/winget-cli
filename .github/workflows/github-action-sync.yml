@@ -57,7 +57,7 @@ jobs:
           source_branch: "master"
           destination_branch: "master"
           sync_tags: "true"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT }}
 
       - name: New commits found sync to Bitbucket
         if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
