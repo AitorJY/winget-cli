@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is syncing with main repo
 
 on:
   push:
-  
+
   workflow_dispatch:
     branches:
       - master
@@ -46,7 +46,7 @@ jobs:
 
       - name: Sync from upstream to fork
         if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
-        uses: chachako/tags-sync@v1
+        uses: chachako/tags-sync@v1.0.80
         with:
           base-repository: microsoft/winget-cli
 
