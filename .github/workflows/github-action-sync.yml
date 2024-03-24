@@ -21,7 +21,7 @@ jobs:
     
     steps:
       - name: Print env force push
-        run: echo "Environment FORCE_PUSH_UPDATE ${{ env.FORCE_PUSH_UPDATE }}."
+        run: echo "Environment FORCE_PUSH_UPDATE ${{ env.FORCE_PUSH_UPDATE }} ${{ inputs.forcePush }}."
 
       - name: Checkout target repo
         uses: actions/checkout@v4
