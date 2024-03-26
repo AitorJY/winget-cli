@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is syncing with main repo
 
 on:
   schedule:
-    -cron: '1 * * * *'
+    - cron: '1 * * * *'
 
   workflow_dispatch:
     branches:
