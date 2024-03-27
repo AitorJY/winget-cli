@@ -61,7 +61,10 @@ namespace AppInstaller::CLI
 
         Logging::UseGlobalTelemetryLoggerActivityIdOnly();
 
-        Execution::Context context{ std::cout, std::cin };
+        std::ofstream ofs;
+        ofs.setstate(std::ios_base::badbit);
+        Execution::Context context{ ofs, std::cin };
+
         auto previousThreadGlobals = context.SetForCurrentThread();
 
         Logging::Log().EnableChannel(Settings::User().Get<Settings::Setting::LoggingChannelPreference>());
