@@ -1,5 +1,7 @@
 LIBRARY     WinGetUtil
 EXPORTS
+    NinjaWingetInvoke
+    NinjaWingetFree
     WinGetLoggingInit
     WinGetLoggingTerm
     WinGetSQLiteIndexCreate

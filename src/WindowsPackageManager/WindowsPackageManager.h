@@ -13,6 +13,9 @@ extern "C"
 
     using WindowsPackageManagerServerModuleTerminationCallback = void (*)();
 
+    int WINDOWS_PACKAGE_MANAGER_API_CALLING_CONVENTION NinjaWingetInvoke(const char* request, char** response);
+    int WINDOWS_PACKAGE_MANAGER_API_CALLING_CONVENTION NinjaWingetFree(char* response);
+
     // The core function to act against command line input.
     int WINDOWS_PACKAGE_MANAGER_API_CALLING_CONVENTION WindowsPackageManagerCLIMain(int argc, wchar_t const** argv);
 
