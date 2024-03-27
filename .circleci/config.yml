@@ -1,0 +1,56 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@5.0
+
+
+commands:
+  launch_build:
+    description: "Launches the build with parameters"
+    parameters:
+      config:
+        type: string
+        default: '"Release"'
+      platform:
+        type: string
+        default: '"x86"'
+    steps:      
+      - run:
+          name: Launch the build
+          shell: powershell.exe
+          command: |
+            $MSBuild = "${Env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\msbuild.exe"
+            $Config = << parameters.config >>
+            $Platform = << parameters.platform >>
+            & $MSBuild src\AppInstallerCLI.sln /nologo /nr:false /p:AppxBundlePlatforms="x86" /p:AppxPackageDir="AppxPackages" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=SideloadOnly /p:platform=$Platform /p:configuration=$Config /p:VisualStudioVersion="17.0" /p:SpectreMitigation=false
+
+
+jobs:
+  compile-win-x86-default:
+    executor: win/default
+
+    steps:
+      - checkout
+
+      - run:
+          name: Nuget dependencies
+          shell: cmd.exe
+          command: nuget restore src\AppInstallerCLI.sln -NonInteractive
+          
+      - launch_build:
+          platform: '"x86"'
+          config: '"Release"'
+
+      - launch_build:
+          platform: '"x86"'
+          config: '"Debug"'
+
+      - run:
+            name: List directory result
+            shell: cmd.exe
+            command: dir /s
+
+workflows:
+  build-win-x86-default:
+    jobs:
+      - compile-win-x86-default
