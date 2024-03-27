@@ -22,7 +22,7 @@ commands:
             $MSBuild = "${Env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\msbuild.exe"
             $Config = << parameters.config >>
             $Platform = << parameters.platform >>
-            & $MSBuild src\AppInstallerCLI.sln /nologo /nr:false /p:AppxBundlePlatforms="x86" /p:AppxPackageDir="AppxPackages" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=SideloadOnly /p:platform=$Platform /p:configuration=$Config /p:VisualStudioVersion="17.0" /p:SpectreMitigation=false
+            & $MSBuild src\AppInstallerCLI.sln /t:WindowsPackageManager:Rebuild /nologo /nr:false /p:AppxBundlePlatforms="x86" /p:AppxPackageDir="AppxPackages" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=SideloadOnly /p:platform=$Platform /p:configuration=$Config /p:VisualStudioVersion="17.0" /p:SpectreMitigation=false
 
 
 jobs:
