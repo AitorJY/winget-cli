@@ -3,6 +3,16 @@ version: 2.1
 orbs:
   win: circleci/windows@5.0
 
+parameters:
+  target-ver:
+    type: string
+    default: "v1.7.10514"
+  build-debug:
+    type: boolean
+    default: true
+  save-artifacts:
+    type: boolean
+    default: true
 
 commands:
   launch_build:
@@ -41,14 +51,31 @@ jobs:
           platform: '"x86"'
           config: '"Release"'
 
-      - launch_build:
-          platform: '"x86"'
-          config: '"Debug"'
+      - when:
+          condition: 
+            equal: [true, << pipeline.parameters.build-debug >>] 
+          steps:
+            - launch_build:
+                platform: '"x86"'
+                config: '"Debug"'
 
       - run:
             name: List directory result
             shell: cmd.exe
             command: dir /s
+
+      - run:
+          name: Create ZIP with component
+          shell: bash.exe
+          command: |
+              .circleci/create_zip.sh << pipeline.parameters.target-ver >>
+
+      - when:
+          condition: 
+            equal: [true, << pipeline.parameters.save-artifacts >>] 
+          steps:
+            - store_artifacts:
+                path: winget-cli_<< pipeline.parameters.target-ver >>.zip
 
 workflows:
   build-win-x86-default:
