@@ -2,6 +2,9 @@
 #include "../../WindowsPackageManager/WindowsPackageManager.h"
 #include "NinjaProductCollection.h"
 #include "AppInstallerErrors.h"
+
+#pragma warning(disable : 26495)
+#pragma warning(disable : 28020)
 #include "../../Valijson/valijson/thirdparty/nlohmann-json-3.1.2/nlohmann/json.hpp"
 #include <list>
 
