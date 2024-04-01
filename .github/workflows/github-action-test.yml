@@ -29,3 +29,4 @@ jobs:
           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
           GIT_BRANCH: "ninja-develop"
           REPO_NAME: "nj-winget-cli"
+          ADDITIONAL_COMMANDS: "git merge -X theirs --no-ff origin/master && git push --force origin ninja-develop"
