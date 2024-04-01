@@ -70,3 +70,15 @@ jobs:
           GIT_PUSH_ARGS: "--tags --force"
           PUSH_ALL_REFS: false
           GIT_REF: refs/heads/master
+
+      - name: Checkout Bitbucket and sync ninja-develop with master
+        if: steps.sync.outputs.has_new_commits == 'true' || env.FORCE_PUSH_UPDATE == 'true'
+        uses: leberechtreinhold/checkout-external-repo-action@master
+        with:
+          GIT_REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
+          GIT_USERNAME: AitorJimenez
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+          GIT_BRANCH: "ninja-develop"
+          REPO_NAME: "nj-winget-cli"
+          WORKING_DIR: ".."
+          ADDITIONAL_COMMANDS: "git merge -X theirs --no-ff origin/master && git push --force origin ninja-develop"
