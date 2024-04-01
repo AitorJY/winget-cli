@@ -18,8 +18,8 @@ jobs:
           ref: 'master'
 
       - name: Print env
-        working-directory: ../
-        run: pwd && ls -laR
+        working-directory: ../../
+        run: pwd && tree -L 3 -u -g -p -d
 
       - name: Checkout external
         uses: leberechtreinhold/checkout-external-repo-action@master
