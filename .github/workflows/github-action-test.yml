@@ -23,6 +23,7 @@ jobs:
 
       - name: Checkout external
         uses: leberechtreinhold/checkout-external-repo-action@master
+        working-directory: ../
         with:
           GIT_REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
           GIT_USERNAME: AitorJimenez
