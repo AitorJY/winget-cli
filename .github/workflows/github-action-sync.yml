@@ -77,6 +77,8 @@ jobs:
         with:
           GIT_REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
           GIT_USERNAME: AitorJimenez
+          GIT_USER: "Aitor Jiménez Yañez"
+          GIT_EMAIL: "Aitor.JimenezYanez@ninjarmm.com"
           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
           GIT_BRANCH: "ninja-develop"
           REPO_NAME: "nj-winget-cli"
