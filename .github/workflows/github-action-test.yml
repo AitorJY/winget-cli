@@ -1,0 +1,21 @@
+name: TEST ACTION
+run-name: ${{ github.actor }} is testing stuff
+
+on:
+  workflow_dispatch:
+    branches:
+      - master
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    name: Test stuff
+    
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          ref: 'master'
+
+      - name: Print env
+        run: pwd && ls -laR
