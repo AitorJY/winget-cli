@@ -18,4 +18,5 @@ jobs:
           ref: 'master'
 
       - name: Print env
+        working-directory: ../
         run: pwd && ls -laR
