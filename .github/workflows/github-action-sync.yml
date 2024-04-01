@@ -83,4 +83,4 @@ jobs:
           GIT_BRANCH: "ninja-develop"
           REPO_NAME: "nj-winget-cli"
           WORKING_DIR: ".."
-          ADDITIONAL_COMMANDS: "git merge -v -X theirs --no-ff origin/master && git push --force -v origin ninja-develop"
+          ADDITIONAL_COMMANDS: "echo test && git merge -v -X theirs --no-ff origin/master && git push --force -v origin ninja-develop"
