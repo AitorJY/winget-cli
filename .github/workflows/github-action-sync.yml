@@ -83,4 +83,4 @@ jobs:
           GIT_BRANCH: "ninja-develop"
           REPO_NAME: "nj-winget-cli"
           WORKING_DIR: ".."
-          ADDITIONAL_COMMANDS: "echo Merging... && echo $GIT_AUTHOR_EMAIL && git merge -v -X theirs --no-ff origin/master && echo Pushing... && git push --force -v origin ninja-develop"
+          ADDITIONAL_COMMANDS: "echo Merging as $GIT_COMITTER_EMAIL && git merge -v -X theirs --no-ff origin/master && echo Pushing... && git push --force -v origin ninja-develop"
