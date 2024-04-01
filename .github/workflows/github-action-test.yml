@@ -20,3 +20,12 @@ jobs:
       - name: Print env
         working-directory: ../
         run: pwd && ls -laR
+
+      - name: Checkout external
+        uses: leberechtreinhold/checkout-external-repo-action@master
+        with:
+          GIT_REMOTE: 'https://AitorJimenez@bitbucket.org/ninjarmm/nj-winget-cli.git'
+          GIT_USERNAME: AitorJimenez
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+          GIT_BRANCH: "ninja-develop"
+          REPO_NAME: "nj-winget-cli"
