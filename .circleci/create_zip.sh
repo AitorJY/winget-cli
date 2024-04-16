@@ -53,6 +53,7 @@ copy_libs() {
   fi
 
   cp "src/x86/${build_type}/WindowsPackageManager/WindowsPackageManager.lib" "$lib_dir"
+  cp "src/x86/${build_type}/WindowsPackageManager/WindowsPackageManager.pdb" "$lib_dir"
   cp "src/x86/${build_type}/WindowsPackageManager/WindowsPackageManager.dll" "$lib_dir"
 }
 
