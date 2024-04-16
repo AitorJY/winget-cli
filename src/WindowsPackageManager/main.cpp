@@ -16,6 +16,7 @@
 #include <AppInstallerErrors.h>
 #include <winget/GroupPolicy.h>
 #include <ComClsids.h>
+#include <NinjaCustomCommands.h>
 
 using namespace winrt::Microsoft::Management::Deployment;
 
@@ -35,6 +36,18 @@ CoCreatableClassWrlCreatorMapInclude(ConfigurationStaticFunctionsShim);
 
 extern "C"
 {
+    int WINDOWS_PACKAGE_MANAGER_API_CALLING_CONVENTION NinjaWingetInvoke(const char* input, char** output) try
+    {
+        return Ninja::WingetInvoke(input, output);
+    }
+    CATCH_RETURN();
+
+    int WINDOWS_PACKAGE_MANAGER_API_CALLING_CONVENTION NinjaWingetFree(char* output) try
+    {
+        return Ninja::WingetFree(output);
+    }
+    CATCH_RETURN();
+
     int WINDOWS_PACKAGE_MANAGER_API_CALLING_CONVENTION WindowsPackageManagerCLIMain(int argc, wchar_t const** argv) try
     {
         ::Microsoft::WRL::Module<::Microsoft::WRL::ModuleType::InProc>::Create();

@@ -12,6 +12,16 @@
 #include <winget/PinningData.h>
 #include <winget/Runtime.h>
 
+#include <NinjaProductCollection.h>
+
+namespace Ninja {
+    Ninja::ProductCollection products_cached;
+    Ninja::FilterProduct filter_products_cached;
+
+    Ninja::ProductVersionCollection product_versions_cached;
+    Ninja::FilterVersion filter_versions_cached;
+}
+
 using namespace std::string_literals;
 using namespace AppInstaller::Utility::literals;
 using namespace AppInstaller::Pinning;
@@ -230,6 +240,18 @@ namespace AppInstaller::CLI::Workflow
                     line.AvailableVersion,
                     line.Source
                     });
+                    
+                if ((Ninja::filter_products_cached.empty()) || (Ninja::filter_products_cached.find(line.Id.get()) != Ninja::filter_products_cached.end()))
+                {
+                    Ninja::products_cached.emplace_back(
+                        Ninja::Product{
+                            line.Name.get(),
+                            line.Id.get(),
+                            line.InstalledVersion.get(),
+                            line.AvailableVersion.get(),
+                            line.Source.get()
+                        });
+                }
             }
 
             table.Complete();
@@ -1362,6 +1384,11 @@ namespace AppInstaller::CLI::Workflow
         for (const auto& version : versions)
         {
             table.OutputLine({ version.Version, version.Channel });
+            
+            if ((Ninja::filter_versions_cached.empty()) || (Ninja::filter_versions_cached.find(version.Version) != Ninja::filter_versions_cached.end())) 
+            {
+                Ninja::product_versions_cached.emplace_back(version.Version);
+            }
         }
         table.Complete();
     }

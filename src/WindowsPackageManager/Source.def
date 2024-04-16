@@ -1,5 +1,7 @@
 LIBRARY     WindowsPackageManager
 EXPORTS
+    NinjaWingetInvoke
+    NinjaWingetFree
     WindowsPackageManagerCLIMain
     WindowsPackageManagerServerInitialize
     WindowsPackageManagerServerModuleCreate
