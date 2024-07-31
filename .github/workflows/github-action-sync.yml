@@ -34,10 +34,11 @@ jobs:
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
         with:
           target_sync_branch: master
-          target_repo_token: ${{ secrets.PATFORKSYNC }}
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
           upstream_sync_branch: master
           upstream_sync_repo: microsoft/winget-cli
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.PATFORKSYNC }}
       - name: No new commits
         if: steps.sync.outputs.has_new_commits == 'false'
         run: echo "There were no new commits."
