@@ -262,7 +262,7 @@
     <value>ID で結果をフィルター処理</value>
   </data>
   <data name="IgnoreWarningsArgumentDescription" xml:space="preserve">
-    <value>警告出力を非表示にします。</value>
+    <value>警告出力を非表示にする</value>
   </data>
   <data name="InstallationDisclaimer1" xml:space="preserve">
     <value>このアプリケーションは所有者からライセンス供与されます。</value>
@@ -861,7 +861,7 @@
     <value>使用できないパッケージを無視する</value>
   </data>
   <data name="ExportIncludeVersionsArgumentDescription" xml:space="preserve">
-    <value>作成されたファイルにパッケージ バージョンを含める</value>
+    <value>エクスポート ファイルにパッケージ バージョンを含める</value>
   </data>
   <data name="ImportIgnoreVersionsArgumentDescription" xml:space="preserve">
     <value>インポート ファイルからパッケージ バージョンを無視する</value>
@@ -1173,6 +1173,9 @@
   <data name="ShowLabelInstallerReleaseDate" xml:space="preserve">
     <value>リリース日:</value>
   </data>
+  <data name="ShowLabelInstallerOfflineDistributionSupported" xml:space="preserve">
+    <value>オフライン配信をサポート:</value>
+  </data>
   <data name="ShowLabelPublisherUrl" xml:space="preserve">
     <value>発行元 URL:</value>
   </data>
@@ -1280,6 +1283,9 @@
   </data>
   <data name="InstallFlowReturnCodeSystemNotSupported" xml:space="preserve">
     <value>現在のシステム構成では、このパッケージのインストールはサポートされていません。</value>
+  </data>
+  <data name="InstallFlowReturnCodeCustomError" xml:space="preserve">
+    <value>カスタム インストーラー エラーにより、インストールに失敗しました。パッケージ サポートにお問い合わせください。</value>
   </data>
   <data name="InstallAbandoned" xml:space="preserve">
     <value>インストールが破棄されました</value>
@@ -1806,6 +1812,9 @@
   <data name="ConfigurationSuccessfullyApplied" xml:space="preserve">
     <value>構成が正常に適用されました。</value>
   </data>
+  <data name="ConfigurationUnitSuccessfullyApplied" xml:space="preserve">
+    <value>ユニットが正常に適用されました。</value>
+  </data>
   <data name="ConfigurationWaitingOnAnother" xml:space="preserve">
     <value>別の構成がシステムに適用されています。この構成は可能な限り早く続行...</value>
   </data>
@@ -2272,14 +2281,14 @@
   <data name="APPINSTALLER_CLI_ERROR_BLOCKED_BY_POLICY" xml:space="preserve">
     <value>操作はグループ ポリシーによってブロックされています</value>
   </data>
-  <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_INTERNAL_ERROR" xml:space="preserve">
-    <value>REST ソースの内部エラー</value>
+  <data name="APPINSTALLER_CLI_ERROR_RESTAPI_INTERNAL_ERROR" xml:space="preserve">
+    <value>Rest API 内部エラー</value>
   </data>
   <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_INVALID_URL" xml:space="preserve">
     <value>REST ソース URL が無効です</value>
   </data>
-  <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_UNSUPPORTED_MIME_TYPE" xml:space="preserve">
-    <value>サポートされていない MIME の種類が REST ソースから返されました</value>
+  <data name="APPINSTALLER_CLI_ERROR_RESTAPI_UNSUPPORTED_MIME_TYPE" xml:space="preserve">
+    <value>REST API によって返されたサポートされていない MIME の種類</value>
   </data>
   <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_INVALID_VERSION" xml:space="preserve">
     <value>REST ソース コントラクト バージョンが無効です</value>
@@ -2299,8 +2308,8 @@
   <data name="APPINSTALLER_CLI_ERROR_UNSUPPORTED_SOURCE_REQUEST" xml:space="preserve">
     <value>検索要求は 1 つ以上のソースでサポートされていません</value>
   </data>
-  <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_ENDPOINT_NOT_FOUND" xml:space="preserve">
-    <value>REST ソース エンドポイントが見つかりません。</value>
+  <data name="APPINSTALLER_CLI_ERROR_RESTAPI_ENDPOINT_NOT_FOUND" xml:space="preserve">
+    <value>Rest API エンドポイントが見つかりません。</value>
   </data>
   <data name="APPINSTALLER_CLI_ERROR_SOURCE_OPEN_FAILED" xml:space="preserve">
     <value>ソースを開けませんでした。</value>
@@ -2517,6 +2526,9 @@
   </data>
   <data name="APPINSTALLER_CLI_ERROR_INSTALL_UPGRADE_NOT_SUPPORTED" xml:space="preserve">
     <value>インストーラーは既存のパッケージのアップグレードをサポートしていません。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_INSTALL_CUSTOM_ERROR" xml:space="preserve">
+    <value>カスタム インストーラー エラーにより、インストールに失敗しました。</value>
   </data>
   <data name="WINGET_INSTALLED_STATUS_ARP_ENTRY_NOT_FOUND" xml:space="preserve">
     <value>パッケージのアプリと機能エントリが見つかりませんでした。</value>
@@ -2813,5 +2825,383 @@
   <data name="RepairFailedWithCode" xml:space="preserve">
     <value>修復が終了コードで失敗しました: {0}</value>
     <comment>{Locked="{0}"} Error message displayed when an attempt to repair an application package fails. {0} is a placeholder replaced by an error code.</comment>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_SQLITE_CONNECTION_TERMINATED" xml:space="preserve">
+    <value>SQLite 接続は破損を防ぐために終了しました。</value>
+  </data>
+  <data name="UninstallAllVersionsArgumentDescription" xml:space="preserve">
+    <value>すべてのバージョンをアンインストール</value>
+  </data>
+  <data name="TargetVersionArgumentDescription" xml:space="preserve">
+    <value>処理するバージョン</value>
+  </data>
+  <data name="UninstallFailedDueToMultipleVersions" xml:space="preserve">
+    <value>このパッケージの複数のバージョンがインストールされています。検索を絞り込むか、'--version' 引数を渡して 1 つ選択するか、'--all-versions' フラグを渡してすべてをアンインストールしてください。</value>
+    <comment>{Locked="--version,--all-versions"}</comment>
+  </data>
+  <data name="PolicyEnableProxyCommandLineOptions" xml:space="preserve">
+    <value>プロキシ コマンド ライン オプションWindows パッケージ マネージャー有効にする</value>
+    <comment>Describes a Group Policy that can enable the use of the --proxy option to set a proxy</comment>
+  </data>
+  <data name="ProxyArgumentDescription" xml:space="preserve">
+    <value>この実行に使用するプロキシを設定します</value>
+  </data>
+  <data name="NoProxyArgumentDescription" xml:space="preserve">
+    <value>この実行に対するプロキシの使用を無効にする</value>
+  </data>
+  <data name="ResetAdminSettingFailed" xml:space="preserve">
+    <value>{0} をリセットできません。この設定はポリシーによって制御されます。詳細については、システム管理者に問い合わせてください。</value>
+    <comment>{Locked="{0}"} The value will be replaced with the feature name</comment>
+  </data>
+  <data name="ResetAdminSettingSucceeded" xml:space="preserve">
+    <value>管理者設定 '{0}' をリセットします。</value>
+    <comment>{Locked="{0}"} Message displayed after the user resets an admin setting to its default value. Reset is used as verb in past tense. {0} is a placeholder replaced by the setting name.</comment>
+  </data>
+  <data name="SetAdminSettingFailed" xml:space="preserve">
+    <value>{0} を設定できません。この設定はポリシーによって制御されます。詳細については、システム管理者に問い合わせてください。</value>
+    <comment>{Locked="{0}"} The value will be replaced with the feature name</comment>
+  </data>
+  <data name="SetAdminSettingSucceeded" xml:space="preserve">
+    <value>管理者設定の '{0}' を '{1}' に設定します。</value>
+    <comment>{Locked="{0}"} Message displayed after the user sets the value of an admin setting. Set is used as a verb in past tense. {0} is a placeholder replaced by the setting name. {1} is a placeholder replaced </comment>
+  </data>
+  <data name="SettingNameArgumentDescription" xml:space="preserve">
+    <value>変更する設定の名前</value>
+  </data>
+  <data name="SettingValueArgumentDescription" xml:space="preserve">
+    <value>設定に設定する値。</value>
+  </data>
+  <data name="SettingsResetCommandLongDescription" xml:space="preserve">
+    <value>管理者設定を既定値にリセットします。</value>
+  </data>
+  <data name="SettingsResetCommandShortDescription" xml:space="preserve">
+    <value>管理者設定を既定値にリセットします。</value>
+  </data>
+  <data name="SettingsSetCommandLongDescription" xml:space="preserve">
+    <value>管理者設定の値を設定します。</value>
+  </data>
+  <data name="SettingsSetCommandShortDescription" xml:space="preserve">
+    <value>管理者設定の値を設定します。</value>
+  </data>
+  <data name="SourceExplicitArgumentDescription" xml:space="preserve">
+    <value>指定しない限り、ソースを検出から除外します</value>
+  </data>
+  <data name="SourceListExplicit" xml:space="preserve">
+    <value>成人指定</value>
+  </data>
+  <data name="SourceTrustLevelArgumentDescription" xml:space="preserve">
+    <value>ソースの信頼レベル (なしまたは信頼済み)</value>
+  </data>
+  <data name="SourceListTrustLevel" xml:space="preserve">
+    <value>信頼レベル</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_DISPLAYCATALOG_API_FAILED" xml:space="preserve">
+    <value>Microsoft Store パッケージ カタログを取得できませんでした。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_NO_APPLICABLE_DISPLAYCATALOG_PACKAGE" xml:space="preserve">
+    <value>Microsoft Store パッケージ カタログから該当する Microsoft Store パッケージが見つかりません。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_SFSCLIENT_API_FAILED" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロード情報を取得できませんでした。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_NO_APPLICABLE_SFSCLIENT_PACKAGE" xml:space="preserve">
+    <value>ダウンロードする適用可能なMicrosoft Store パッケージが見つかりませんでした。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_LICENSING_API_FAILED" xml:space="preserve">
+    <value>Microsoft Store パッケージ ライセンスを取得できませんでした。</value>
+  </data>
+  <data name="MSStoreDownloadNoApplicablePackageFound" xml:space="preserve">
+    <value>該当する Microsoft Store パッケージが見つかりません。</value>
+  </data>
+  <data name="MSStoreDownloadPackageHashVerified" xml:space="preserve">
+    <value>Microsoft Store パッケージ ハッシュの検証に成功しました</value>
+  </data>
+  <data name="MSStoreDownloadPackageHashMismatch" xml:space="preserve">
+    <value>Microsoft Store パッケージ ハッシュの不一致</value>
+  </data>
+  <data name="MSStoreDownloadPackageDownloaded" xml:space="preserve">
+    <value>Microsoft Store パッケージがダウンロードされました: {0}</value>
+    <comment>{Locked="{0}"} Full path of the downloaded package.</comment>
+  </data>
+  <data name="MSStoreDownloadPackageDownloadFailed" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロードに失敗しました: {0}</value>
+    <comment>{Locked="{0}"} Package name.</comment>
+  </data>
+  <data name="MSStoreDownloadPackageDownloadSuccess" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロードが完了しました</value>
+  </data>
+  <data name="MSStoreDownloadMainPackages" xml:space="preserve">
+    <value>Microsoft Store からメイン パッケージをダウンロードしています...</value>
+  </data>
+  <data name="MSStoreDownloadDependencyPackages" xml:space="preserve">
+    <value>Microsoft Store から依存パッケージをダウンロードしています...</value>
+  </data>
+  <data name="MSStoreDownloadGetDownloadInfo" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロード情報を取得しています</value>
+  </data>
+  <data name="MSStoreDownloadGetDownloadInfoFailed" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロード情報を取得できませんでした</value>
+  </data>
+  <data name="MSStoreDownloadGetLicense" xml:space="preserve">
+    <value>Microsoft Store パッケージ ライセンスを取得しています</value>
+  </data>
+  <data name="MSStoreDownloadGetLicenseSuccess" xml:space="preserve">
+    <value>Microsoft Store のパッケージ ライセンスを保存しました: {0}</value>
+    <comment>{Locked="{0}"} License file full path.</comment>
+  </data>
+  <data name="MSStoreDownloadGetLicenseFailed" xml:space="preserve">
+    <value>Microsoft Store パッケージ ライセンスを取得できませんでした</value>
+  </data>
+  <data name="MSStoreDownloadRenameNotSupported" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロードでは、--rename 引数はサポートされていません。Microsoft Store パッケージでは、Microsoft Store カタログによって提供される名前が使用されます。</value>
+    <comment>{Locked="--rename"}</comment>
+  </data>
+  <data name="MSStoreDownloadAuthenticationNotice" xml:space="preserve">
+    <value>Microsoft Store パッケージのダウンロードにはMicrosoft Entra ID 認証が必要です。必要に応じて認証プロンプトが表示されることがあります。認証された情報は、アクセス承認のためにMicrosoft サービスと共有されます。パッケージ ライセンスMicrosoft Storeするには、Microsoft Entra ID アカウントがグローバル管理者、ユーザー管理者、またはライセンス管理者のメンバーである必要があります。</value>
+    <comment>{Locked="Global Administrator,User Administrator,License Administrator"}</comment>
+  </data>
+  <data name="SkipMicrosoftStorePackageLicenseArgumentDescription" xml:space="preserve">
+    <value>Microsoft Store パッケージのオフライン ライセンスの取得をスキップします</value>
+  </data>
+  <data name="PlatformArgumentDescription" xml:space="preserve">
+    <value>ターゲット プラットフォームの選択</value>
+  </data>
+  <data name="ConfigurationExportAddingToFile" xml:space="preserve">
+    <value>構成ファイルの追加: {0}</value>
+    <comment>{Locked="{0}"}</comment>
+  </data>
+  <data name="ConfigurationExportSuccessful" xml:space="preserve">
+    <value>エクスポートに成功しました</value>
+  </data>
+  <data name="ConfigurationGettingResourceSettings" xml:space="preserve">
+    <value>構成設定を取得しています...</value>
+  </data>
+  <data name="ConfigureExportArgumentRequiredError" xml:space="preserve">
+    <value>--resource を含む --packageId または --module を少なくとも指定する必要があります。または、--all を使用して、すべてのパッケージ構成をエクスポートします。</value>
+    <comment>{Locked="--packageId,--module, --resource, --all"}</comment>
+  </data>
+  <data name="ConfigureExportArgumentConflictWithAllError" xml:space="preserve">
+    <value>引数 --packageId、--module、--resource を --all と共に使用することはできません。</value>
+    <comment>{Locked="--packageId,--module, --resource, --all"}</comment>
+  </data>
+  <data name="ConfigureExportCommandLongDescription" xml:space="preserve">
+    <value>構成リソースを構成ファイルにエクスポートします。--all と共に使用すると、すべてのパッケージ構成がエクスポートされます。--packageId と共に使用すると、指定されたパッケージ ID の WinGetPackage リソースがエクスポートされます。--module および --resource と共に使用する場合、リソースの設定を取得し、構成ファイルにエクスポートします。出力構成ファイルが既に存在する場合は、エクスポートされた構成リソースを追加します。</value>
+    <comment>{Locked="WinGetPackage,--packageId,--module, --resource"}</comment>
+  </data>
+  <data name="ConfigureExportCommandShortDescription" xml:space="preserve">
+    <value>構成リソースを構成ファイルにエクスポートします。</value>
+  </data>
+  <data name="ConfigureExportModule" xml:space="preserve">
+    <value>エクスポートするリソースのモジュール。</value>
+  </data>
+  <data name="ConfigureExportPackageId" xml:space="preserve">
+    <value>エクスポートするパッケージ識別子。</value>
+  </data>
+  <data name="ConfigureExportResource" xml:space="preserve">
+    <value>エクスポートする構成リソース。</value>
+  </data>
+  <data name="ConfigureExportAll" xml:space="preserve">
+    <value>すべてのパッケージ構成をエクスポートします。</value>
+  </data>
+  <data name="WINGET_CONFIG_ERROR_GET_FAILED" xml:space="preserve">
+    <value>構成ユニットはプロパティの取得に失敗しました。</value>
+  </data>
+  <data name="ConfigurationExportFailed" xml:space="preserve">
+    <value>構成をエクスポートできませんでした。</value>
+  </data>
+  <data name="ConfigureExportUnitDescription" xml:space="preserve">
+    <value>{0} の構成</value>
+    <comment>{Locked="{0}"}</comment>
+  </data>
+  <data name="ConfigureExportUnitInstallDescription" xml:space="preserve">
+    <value>{0} のインストール</value>
+    <comment>{Locked="{0}"}</comment>
+  </data>
+  <data name="ConfigurationWarningSetViewTruncated" xml:space="preserve">
+    <value>構成ファイルに存在するデータの一部が、この出力に対して切り捨てられました。ファイルの内容を検査して、完全なコンテンツを確認してください。</value>
+  </data>
+  <data name="ConfigurationWarningValueTruncated" xml:space="preserve">
+    <value>&lt;この値は切り捨てられています。完全なテキストについてはファイルの内容を調べてください&gt;</value>
+    <comment>Keep some form of separator like the "&lt;&gt;" around the text so that it stands out from the preceding text.</comment>
+  </data>
+  <data name="ConfigureListCommandLongDescription" xml:space="preserve">
+    <value>システムに適用された構成の詳細レベルを表示します。このデータは、`configure` コマンドと共に使用して、詳細を取得できます。</value>
+    <comment>{Locked="`configure`"}</comment>
+  </data>
+  <data name="ConfigureListCommandShortDescription" xml:space="preserve">
+    <value>構成履歴の表示</value>
+  </data>
+  <data name="ConfigurationHistoryEmpty" xml:space="preserve">
+    <value>履歴に構成はありません。</value>
+  </data>
+  <data name="ConfigurationHistoryItemArgumentDescription" xml:space="preserve">
+    <value>履歴からアイテムを選択する</value>
+  </data>
+  <data name="ConfigurationHistoryItemNotFound" xml:space="preserve">
+    <value>指定されたデータに一致する単一の構成が見つかりませんでした。必要な構成と厳密に一致する完全な名前または識別子の一部を指定してください。</value>
+  </data>
+  <data name="ConfigurationHistoryRemoveArgumentDescription" xml:space="preserve">
+    <value>履歴からアイテムを削除する</value>
+  </data>
+  <data name="ConfigureListFirstApplied" xml:space="preserve">
+    <value>最初に適用された日</value>
+    <comment>Column header for date values indicating when a configuration was first applied to the system.</comment>
+  </data>
+  <data name="ConfigureListIdentifier" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="ConfigureListName" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="ConfigureListOrigin" xml:space="preserve">
+    <value>元の場所</value>
+  </data>
+  <data name="ConfigureListPath" xml:space="preserve">
+    <value>パス</value>
+  </data>
+  <data name="WINGET_CONFIG_ERROR_HISTORY_ITEM_NOT_FOUND" xml:space="preserve">
+    <value>指定された構成が見つかりませんでした。</value>
+  </data>
+  <data name="ConfigurationSetStateCompleted" xml:space="preserve">
+    <value>完了済み</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationSetStateInProgress" xml:space="preserve">
+    <value>処理中</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationSetStatePending" xml:space="preserve">
+    <value>保留中</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationSetStateUnknown" xml:space="preserve">
+    <value>不明</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationStatusWatchArgumentDescription" xml:space="preserve">
+    <value>構成状態を監視します。</value>
+    <comment>As in "to monitor the status of a configuration being applied".</comment>
+  </data>
+  <data name="ConfigurationUnitStateCompleted" xml:space="preserve">
+    <value>完了済み</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStateInProgress" xml:space="preserve">
+    <value>処理中</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStatePending" xml:space="preserve">
+    <value>保留中</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStateSkipped" xml:space="preserve">
+    <value>スキップ済み</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStateUnknown" xml:space="preserve">
+    <value>不明</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigureListApplyBegun" xml:space="preserve">
+    <value>適用を開始しました</value>
+    <comment>When the configuration application started.</comment>
+  </data>
+  <data name="ConfigureListApplyEnded" xml:space="preserve">
+    <value>適用が終了しました</value>
+    <comment>When the configuration application ended.</comment>
+  </data>
+  <data name="ConfigureListResult" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="ConfigureListResultDescription" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="ConfigureListState" xml:space="preserve">
+    <value>状態</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigureListUnit" xml:space="preserve">
+    <value>単位数</value>
+  </data>
+  <data name="StoreInstall_PackageNotAvailableForCurrentSystem" xml:space="preserve">
+    <value>パッケージは現在の Windows バージョンまたはプラットフォームと互換性がありません。</value>
+  </data>
+  <data name="ConfigurationSuppressPrologueArgumentDescription" xml:space="preserve">
+    <value>可能な場合は初期設定の詳細を表示しない</value>
+  </data>
+  <data name="MSStoreDownloadMultiplePackagesNotice" xml:space="preserve">
+    <value>異なるプラットフォームとアーキテクチャを対象に、複数のMicrosoft Store パッケージをダウンロードできます。--platform、 --architecture を使用してパッケージをフィルター処理できます。</value>
+    <comment>{Locked="--platform--architecture"}</comment>
+  </data>
+  <data name="MSStoreDownloadGetLicenseForbidden" xml:space="preserve">
+    <value>Microsoft Store パッケージ ライセンスを取得できませんでした。Microsoft Entra ID アカウントは、グローバル管理者、ユーザー管理者、またはライセンス管理者のメンバーではありません。--skip-license を使用して、パッケージ ライセンスの取得Microsoft Storeスキップします。</value>
+    <comment>{Locked="Global Administrator,User Administrator,License Administrator,--skip-license"}</comment>
+  </data>
+  <data name="MSStoreDownloadPackageDownloadNotSupported" xml:space="preserve">
+    <value>Microsoft Store パッケージはダウンロードをサポートしていません。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_SFSCLIENT_PACKAGE_NOT_SUPPORTED" xml:space="preserve">
+    <value>Microsoft Store パッケージはダウンロードをサポートしていません。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_LICENSING_API_FAILED_FORBIDDEN" xml:space="preserve">
+    <value>Microsoft Store パッケージ ライセンスを取得できませんでした。Microsoft Entra ID アカウントに必要な特権がありません。</value>
+  </data>
+  <data name="WINGET_CONFIG_ERROR_PARAMETER_INTEGRITY_BOUNDARY" xml:space="preserve">
+    <value>整合性境界を越えてパラメーターを渡すことはできません。</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_INSTALLER_ZERO_BYTE_FILE" xml:space="preserve">
+    <value>ゼロ バイト インストーラーをダウンロードしました;ネットワーク接続が正しく動作していることを確認してください。</value>
+  </data>
+  <data name="InstallerZeroByteFile" xml:space="preserve">
+    <value>ゼロ バイト インストーラーをダウンロードしました;ネットワーク接続が正しく動作していることを確認してください。</value>
+  </data>
+  <data name="FontCommandShortDescription" xml:space="preserve">
+    <value>フォントの管理</value>
+  </data>
+  <data name="FontCommandLongDescription" xml:space="preserve">
+    <value>サブコマンドを使用してフォントを管理します。packages.  と同様に、フォントをインストール、アップグレード、またはアンインストールできます</value>
+  </data>
+  <data name="FontFamily" xml:space="preserve">
+    <value>ファミリ</value>
+  </data>
+  <data name="FontFaces" xml:space="preserve">
+    <value>フェイス</value>
+    <comment>"Faces" represents the typeface of the font family such as 'Bold' or 'Italic'</comment>
+  </data>
+  <data name="FontFamilyNameArgumentDescription" xml:space="preserve">
+    <value>ファミリ名で結果をフィルター処理する</value>
+  </data>
+  <data name="FontFace" xml:space="preserve">
+    <value>顔</value>
+    <comment>"Face" represents the typeface of a font family such as 'Bold' or 'Italic'</comment>
+  </data>
+  <data name="FontFilePaths" xml:space="preserve">
+    <value>パス</value>
+  </data>
+  <data name="NoInstalledFontFound" xml:space="preserve">
+    <value>入力条件に一致するインストール済みのフォントが見つかりませんでした。</value>
+  </data>
+  <data name="FontListCommandShortDescription" xml:space="preserve">
+    <value>インストール済みフォントを一覧表示します</value>
+  </data>
+  <data name="FontListCommandLongDescription" xml:space="preserve">
+    <value>インストールされているすべてのフォント、または特定のフォントの完全な詳細を一覧表示します。</value>
+  </data>
+  <data name="FontVersion" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="ConfigurationModules" xml:space="preserve">
+    <value>構成モジュール</value>
+    <comment>PowerShell Modules that are used for the Configuration feature</comment>
+  </data>
+  <data name="InstallerDownloadRequiresAuthentication" xml:space="preserve">
+    <value>パッケージ インストーラーには認証が必要です。必要に応じて認証プロンプトが表示されることがあります。認証された情報はインストーラーのダウンロード URL と共有されます。</value>
+  </data>
+  <data name="InstallerDownloadAuthenticationNotSupported" xml:space="preserve">
+    <value>インストーラーをダウンロードできませんでした。この winget バージョンは、インストーラーのダウンロード認証方法をサポートしていません。最新の winget バージョンにアップグレードしてみてください。</value>
+    <comment>{Locked="winget"}</comment>
+  </data>
+  <data name="InstallerDownloadAuthenticationFailed" xml:space="preserve">
+    <value>インストーラーをダウンロードできませんでした。認証に失敗しました。</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="ProcessorEnvironmentTests.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -8,15 +8,17 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 {
     using System.Collections.Generic;
     using Microsoft.Management.Configuration.UnitTests.Fixtures;
+    using Microsoft.Management.Configuration.UnitTests.Helpers;
     using Moq;
     using Xunit;
     using Xunit.Abstractions;
-    using static Microsoft.Management.Configuration.Processor.Constants.PowerShellConstants;
+    using static Microsoft.Management.Configuration.Processor.PowerShell.Constants.PowerShellConstants;
 
     /// <summary>
     /// HostedEnvironment tests, that is more ProcessorEnvironmentBase tests for non forwarding functions.
     /// </summary>
     [Collection("UnitTestCollection")]
+    [InProc]
     public class ProcessorEnvironmentTests
     {
         private readonly UnitTestFixture fixture;

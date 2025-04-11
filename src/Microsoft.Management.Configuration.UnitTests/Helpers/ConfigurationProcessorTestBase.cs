@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="ConfigurationProcessorTestBase.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -49,7 +49,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Helpers
         /// </summary>
         /// <param name="factory">The factory to use.</param>
         /// <returns>The new <see cref="ConfigurationProcessor"/> object.</returns>
-        protected ConfigurationProcessor CreateConfigurationProcessorWithDiagnostics(IConfigurationSetProcessorFactory? factory = null)
+        internal ConfigurationProcessor CreateConfigurationProcessorWithDiagnostics(IConfigurationSetProcessorFactory? factory = null)
         {
             ConfigurationProcessor result = this.Fixture.ConfigurationStatics.CreateConfigurationProcessor(factory);
             result.Diagnostics += this.EventSink.DiagnosticsHandler;
@@ -62,7 +62,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Helpers
         /// </summary>
         /// <param name="contents">The contents that the stream should contain.</param>
         /// <returns>The created stream.</returns>
-        protected IInputStream CreateStream(string contents)
+        internal IInputStream CreateStream(string contents)
         {
             InMemoryRandomAccessStream result = new InMemoryRandomAccessStream();
 
@@ -79,19 +79,51 @@ namespace Microsoft.Management.Configuration.UnitTests.Helpers
         }
 
         /// <summary>
+        /// Creates an string from the given output stream.
+        /// </summary>
+        /// <param name="stream">The output stream.</param>
+        /// <returns>The created string.</returns>
+        internal string ReadStream(InMemoryRandomAccessStream stream)
+        {
+            string result = string.Empty;
+            using (DataReader reader = new DataReader(stream.GetInputStreamAt(0)))
+            {
+                reader.UnicodeEncoding = UnicodeEncoding.Utf8;
+                reader.LoadAsync((uint)stream.Size).AsTask().Wait();
+                uint bytesToRead = reader.UnconsumedBufferLength;
+
+                if (bytesToRead > 0)
+                {
+                    result = reader.ReadString(bytesToRead);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Creates a configuration unit via the configuration statics object.
         /// </summary>
         /// <returns>A new configuration unit.</returns>
-        protected ConfigurationUnit ConfigurationUnit()
+        internal ConfigurationUnit ConfigurationUnit()
         {
             return this.Fixture.ConfigurationStatics.CreateConfigurationUnit();
+        }
+
+        /// <summary>
+        /// Creates a configuration parameter via the configuration statics object.
+        /// </summary>
+        /// <returns>A new configuration parameter.</returns>
+        internal ConfigurationParameter ConfigurationParameter()
+        {
+            return this.Fixture.ConfigurationStatics.CreateConfigurationParameter();
         }
 
         /// <summary>
         /// Creates a configuration set via the configuration statics object.
         /// </summary>
         /// <returns>A new configuration set.</returns>
-        protected ConfigurationSet ConfigurationSet()
+        internal ConfigurationSet ConfigurationSet()
         {
             return this.Fixture.ConfigurationStatics.CreateConfigurationSet();
         }
@@ -102,7 +134,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Helpers
         /// <param name="configurationSet">The configuration set.</param>
         /// <param name="setResult">The set result.</param>
         /// <param name="resultSource">The result source.</param>
-        protected void VerifySummaryEvent(ConfigurationSet configurationSet, ApplyConfigurationSetResult setResult, ConfigurationUnitResultSource resultSource)
+        internal void VerifySummaryEvent(ConfigurationSet configurationSet, ApplyConfigurationSetResult setResult, ConfigurationUnitResultSource resultSource)
         {
             TelemetryEvent summary = this.VerifySummaryEventShared(configurationSet, ConfigurationUnitIntent.Apply, resultSource == ConfigurationUnitResultSource.None ? 0 : setResult.ResultCode.HResult, resultSource);
 
@@ -127,7 +159,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Helpers
         /// <param name="setResult">The set result.</param>
         /// <param name="resultCode">The result code.</param>
         /// <param name="resultSource">The result source.</param>
-        protected void VerifySummaryEvent(ConfigurationSet configurationSet, TestConfigurationSetResult setResult, int resultCode, ConfigurationUnitResultSource resultSource)
+        internal void VerifySummaryEvent(ConfigurationSet configurationSet, TestConfigurationSetResult setResult, int resultCode, ConfigurationUnitResultSource resultSource)
         {
             TelemetryEvent summary = this.VerifySummaryEventShared(configurationSet, ConfigurationUnitIntent.Assert, resultCode, resultSource);
 

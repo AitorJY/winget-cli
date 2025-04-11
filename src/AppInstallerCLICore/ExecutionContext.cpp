@@ -323,6 +323,7 @@ namespace AppInstaller::CLI::Execution
             clone->EnableSignalTerminationHandler();
         }
         CopyArgsToSubContext(clone.get());
+        CopyDataToSubContext(clone.get());
         return clone;
     }
 
@@ -340,6 +341,17 @@ namespace AppInstaller::CLI::Execution
                 subContext->Args.AddArg(arg.Type, Args.GetArg(arg.Type));
             }
         }
+    }
+
+    void Context::CopyDataToSubContext(Context* subContext)
+    {
+#define COPY_DATA_IF_EXISTS(dataType) \
+        if (this->Contains(dataType)) \
+        { \
+            subContext->Add<dataType>(this->Get<dataType>()); \
+        }
+
+        COPY_DATA_IF_EXISTS(Data::InstallerDownloadAuthenticators);
     }
 
     void Context::EnableSignalTerminationHandler(bool enabled)
@@ -453,7 +465,7 @@ namespace AppInstaller::CLI::Execution
         }
         else if (m_executionStage > stage)
         {
-            THROW_HR_MSG(HRESULT_FROM_WIN32(ERROR_INVALID_STATE), "Reporting ExecutionStage to an earlier Stage without allowBackward as true");
+            THROW_HR_MSG(HRESULT_FROM_WIN32(ERROR_INVALID_STATE), "Reporting ExecutionStage to an earlier Stage: current[%d], new[%d]", ToIntegral(m_executionStage), ToIntegral(stage));
         }
 
         m_executionStage = stage;
@@ -486,6 +498,24 @@ namespace AppInstaller::CLI::Execution
         return SignalTerminationHandler::Instance().WaitForAppShutdownEvent();
     }
 #endif
+
+    void ContextEnumBasedVariantMapActionCallback(const void* map, Data data, EnumBasedVariantMapAction action)
+    {
+        switch (action)
+        {
+        case EnumBasedVariantMapAction::Add:
+            AICLI_LOG(Workflow, Verbose, << "Setting data item: " << data);
+            break;
+        case EnumBasedVariantMapAction::Contains:
+            AICLI_LOG(Workflow, Verbose, << "Checking data item: " << data);
+            break;
+        case EnumBasedVariantMapAction::Get:
+            AICLI_LOG(Workflow, Verbose, << "Getting data item: " << data);
+            break;
+        }
+
+        UNREFERENCED_PARAMETER(map);
+    }
 
     std::string Context::GetResumeId()
     {

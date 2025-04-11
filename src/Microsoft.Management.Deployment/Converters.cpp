@@ -185,8 +185,9 @@ namespace winrt::Microsoft::Management::Deployment::implementation
             break;
         case APPINSTALLER_CLI_ERROR_UNSUPPORTED_RESTSOURCE:
         case APPINSTALLER_CLI_ERROR_RESTSOURCE_INVALID_DATA:
-        case APPINSTALLER_CLI_ERROR_RESTSOURCE_INTERNAL_ERROR:
-        case APPINSTALLER_CLI_ERROR_RESTSOURCE_UNSUPPORTED_MIME_TYPE:
+        case APPINSTALLER_CLI_ERROR_RESTAPI_ENDPOINT_NOT_FOUND:
+        case APPINSTALLER_CLI_ERROR_RESTAPI_INTERNAL_ERROR:
+        case APPINSTALLER_CLI_ERROR_RESTAPI_UNSUPPORTED_MIME_TYPE:
         case APPINSTALLER_CLI_ERROR_RESTSOURCE_INVALID_VERSION:
         case APPINSTALLER_CLI_ERROR_SOURCE_DATA_INTEGRITY_FAILURE:
             resultStatus = winrt::Microsoft::Management::Deployment::FindPackagesResultStatus::CatalogError;
@@ -352,6 +353,21 @@ namespace winrt::Microsoft::Management::Deployment::implementation
         return ::AppInstaller::Manifest::ScopeEnum::Unknown;
     }
 
+    ::AppInstaller::Manifest::ScopeEnum GetManifestRepairScope(winrt::Microsoft::Management::Deployment::PackageRepairScope scope)
+    {
+        switch (scope)
+        {
+        case winrt::Microsoft::Management::Deployment::PackageRepairScope::Any:
+            return ::AppInstaller::Manifest::ScopeEnum::Unknown;
+        case winrt::Microsoft::Management::Deployment::PackageRepairScope::User:
+            return ::AppInstaller::Manifest::ScopeEnum::User;
+        case winrt::Microsoft::Management::Deployment::PackageRepairScope::System:
+            return ::AppInstaller::Manifest::ScopeEnum::Machine;
+        }
+
+        return ::AppInstaller::Manifest::ScopeEnum::Unknown;
+    }
+
     winrt::Microsoft::Management::Deployment::ElevationRequirement GetDeploymentElevationRequirement(::AppInstaller::Manifest::ElevationRequirementEnum elevationRequirement)
     {
         switch (elevationRequirement)
@@ -448,6 +464,8 @@ namespace winrt::Microsoft::Management::Deployment::implementation
             return Microsoft::Management::Deployment::AuthenticationType::None;
         case ::AppInstaller::Authentication::AuthenticationType::MicrosoftEntraId:
             return Microsoft::Management::Deployment::AuthenticationType::MicrosoftEntraId;
+        case ::AppInstaller::Authentication::AuthenticationType::MicrosoftEntraIdForAzureBlobStorage:
+            return Microsoft::Management::Deployment::AuthenticationType::MicrosoftEntraIdForAzureBlobStorage;
         }
 
         return Microsoft::Management::Deployment::AuthenticationType::Unknown;
@@ -481,4 +499,35 @@ namespace winrt::Microsoft::Management::Deployment::implementation
 
         return result;
     }
+
+    AddPackageCatalogStatus GetAddPackageCatalogOperationStatus(winrt::hresult hresult)
+    {
+        switch (hresult)
+        {
+        case APPINSTALLER_CLI_ERROR_AUTHENTICATION_TYPE_NOT_SUPPORTED:
+            return AddPackageCatalogStatus::AuthenticationError;
+        case APPINSTALLER_CLI_ERROR_SOURCE_NOT_SECURE:
+        case APPINSTALLER_CLI_ERROR_INVALID_SOURCE_TYPE:
+        case APPINSTALLER_CLI_ERROR_SOURCE_NOT_REMOTE:
+        case APPINSTALLER_CLI_ERROR_SOURCE_NAME_ALREADY_EXISTS:
+        case APPINSTALLER_CLI_ERROR_SOURCE_ARG_ALREADY_EXISTS:
+            return AddPackageCatalogStatus::InvalidOptions;
+        default:
+            return HandleCommonCatalogOperationStatus<AddPackageCatalogStatus>(hresult);
+        }
+    }
+
+    RemovePackageCatalogStatus GetRemovePackageCatalogOperationStatus(winrt::hresult hresult)
+    {
+        switch (hresult)
+        {
+        case APPINSTALLER_CLI_ERROR_SOURCE_NAME_DOES_NOT_EXIST:
+            return RemovePackageCatalogStatus::InvalidOptions;
+        case APPINSTALLER_CLI_ERROR_INVALID_SOURCE_TYPE:
+            return RemovePackageCatalogStatus::CatalogError;
+        default:
+            return HandleCommonCatalogOperationStatus<RemovePackageCatalogStatus>(hresult);
+        }
+    }
+
 }

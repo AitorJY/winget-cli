@@ -145,6 +145,8 @@ namespace AppInstaller::CLI::Workflow
                     return ExpectedReturnCode(returnCode, APPINSTALLER_CLI_ERROR_INSTALL_BLOCKED_BY_POLICY, Resource::String::InstallFlowReturnCodeBlockedByPolicy);
                 case ExpectedReturnCodeEnum::SystemNotSupported:
                     return ExpectedReturnCode(returnCode, APPINSTALLER_CLI_ERROR_INSTALL_SYSTEM_NOT_SUPPORTED, Resource::String::InstallFlowReturnCodeSystemNotSupported);
+                case ExpectedReturnCodeEnum::Custom:
+                    return ExpectedReturnCode(returnCode, APPINSTALLER_CLI_ERROR_INSTALL_CUSTOM_ERROR, Resource::String::InstallFlowReturnCodeCustomError);
                 default:
                     THROW_HR(E_UNEXPECTED);
                 }
@@ -189,6 +191,7 @@ namespace AppInstaller::CLI::Workflow
         void MsixInstall(Execution::Context& context)
         {
             std::string uri;
+            Deployment::Options deploymentOptions;
             if (context.Contains(Execution::Data::InstallerPath))
             {
                 uri = context.Get<Execution::Data::InstallerPath>().u8string();
@@ -196,7 +199,10 @@ namespace AppInstaller::CLI::Workflow
             else
             {
                 uri = context.Get<Execution::Data::Installer>()->Url;
+                deploymentOptions.ExpectedDigests = context.Get<Execution::Data::MsixDigests>();
             }
+
+            deploymentOptions.SkipReputationCheck = WI_IsFlagSet(context.GetFlags(), Execution::ContextFlag::InstallerTrusted);
 
             bool isMachineScope = Manifest::ConvertToScopeEnum(context.Args.GetArg(Execution::Args::Type::InstallScope)) == Manifest::ScopeEnum::Machine;
 
@@ -220,11 +226,11 @@ namespace AppInstaller::CLI::Workflow
                     {
                         if (isMachineScope)
                         {
-                            return Deployment::AddPackageMachineScope(uri, callback);
+                            return Deployment::AddPackageMachineScope(uri, deploymentOptions, callback);
                         }
                         else
                         {
-                            return Deployment::AddPackageWithDeferredFallback(uri, WI_IsFlagSet(context.GetFlags(), Execution::ContextFlag::InstallerTrusted), callback);
+                            return Deployment::AddPackageWithDeferredFallback(uri, deploymentOptions, callback);
                         }
                     });
             }
@@ -497,7 +503,7 @@ namespace AppInstaller::CLI::Workflow
                 if (FAILED(terminationHR))
                 {
                     context.Reporter.Error() << returnCode.Message << std::endl;
-                    auto returnResponseUrl = expectedReturnCodeItr->second.ReturnResponseUrl;
+                    const auto& returnResponseUrl = expectedReturnCodeItr->second.ReturnResponseUrl;
                     if (!returnResponseUrl.empty())
                     {
                         context.Reporter.Error() << Resource::String::RelatedLink << ' ' << returnResponseUrl << std::endl;
@@ -578,6 +584,8 @@ namespace AppInstaller::CLI::Workflow
 
     void InstallDependencies(Execution::Context& context)
     {
+        using Flags = ProcessMultiplePackages::Flags;
+
         if (Settings::User().Get<Settings::Setting::InstallSkipDependencies>() || context.Args.Contains(Execution::Args::Type::SkipDependencies))
         {
             context.Reporter.Warn() << Resource::String::DependenciesSkippedMessage << std::endl;
@@ -585,14 +593,16 @@ namespace AppInstaller::CLI::Workflow
         }
 
         context <<
-            Workflow::GetDependenciesFromInstaller <<
-            Workflow::ReportDependencies(Resource::String::PackageRequiresDependencies) <<
-            Workflow::EnableWindowsFeaturesDependencies <<
-            Workflow::ProcessMultiplePackages(Resource::String::PackageRequiresDependencies, APPINSTALLER_CLI_ERROR_INSTALL_DEPENDENCIES, {}, true, true, true, true);
+            GetDependenciesFromInstaller <<
+            ReportDependencies(Resource::String::PackageRequiresDependencies) <<
+            EnableWindowsFeaturesDependencies <<
+            ProcessMultiplePackages(Resource::String::PackageRequiresDependencies, APPINSTALLER_CLI_ERROR_INSTALL_DEPENDENCIES, Flags::IgnoreDependencies | Flags::StopOnFailure | Flags::RefreshPathVariable);
     }
 
     void DownloadPackageDependencies(Execution::Context& context)
     {
+        using Flags = ProcessMultiplePackages::Flags;
+
         if (Settings::User().Get<Settings::Setting::InstallSkipDependencies>() || context.Args.Contains(Execution::Args::Type::SkipDependencies))
         {
             context.Reporter.Warn() << Resource::String::DependenciesSkippedMessage << std::endl;
@@ -600,10 +610,10 @@ namespace AppInstaller::CLI::Workflow
         }
 
         context <<
-            Workflow::GetDependenciesFromInstaller <<
-            Workflow::ReportDependencies(Resource::String::PackageRequiresDependencies) <<
-            Workflow::CreateDependencySubContexts(Resource::String::PackageRequiresDependencies) <<
-            Workflow::ProcessMultiplePackages(Resource::String::PackageRequiresDependencies, APPINSTALLER_CLI_ERROR_DOWNLOAD_DEPENDENCIES, {}, true, true, true, false);
+            GetDependenciesFromInstaller <<
+            ReportDependencies(Resource::String::PackageRequiresDependencies) <<
+            CreateDependencySubContexts(Resource::String::PackageRequiresDependencies) <<
+            ProcessMultiplePackages(Resource::String::PackageRequiresDependencies, APPINSTALLER_CLI_ERROR_DOWNLOAD_DEPENDENCIES, Flags::IgnoreDependencies | Flags::StopOnFailure | Flags::DownloadOnly);
     }
 
     void InstallSinglePackage(Execution::Context& context)
@@ -669,6 +679,25 @@ namespace AppInstaller::CLI::Workflow
             Workflow::EnsureValidNestedInstallerMetadataForArchiveInstall;
     }
 
+    ProcessMultiplePackages::ProcessMultiplePackages(
+        StringResource::StringId dependenciesReportMessage,
+        HRESULT resultOnFailure,
+        Flags flags,
+        std::vector<HRESULT>&& ignorableInstallResults) :
+            WorkflowTask("ProcessMultiplePackages"),
+            m_dependenciesReportMessage(dependenciesReportMessage),
+            m_resultOnFailure(resultOnFailure),
+            m_ignorableInstallResults(std::move(ignorableInstallResults))
+    {
+        // Inverted
+        m_ensurePackageAgreements = !WI_IsFlagSet(flags, Flags::SkipPackageAgreements);
+
+        m_ignorePackageDependencies = WI_IsFlagSet(flags, Flags::IgnoreDependencies);
+        m_stopOnFailure = WI_IsFlagSet(flags, Flags::StopOnFailure);
+        m_refreshPathVariable = WI_IsFlagSet(flags, Flags::RefreshPathVariable);
+        m_downloadOnly = WI_IsFlagSet(flags, Flags::DownloadOnly);
+    }
+
     void ProcessMultiplePackages::operator()(Execution::Context& context) const
     {
         if (!context.Contains(Execution::Data::PackageSubContexts))
@@ -676,7 +705,7 @@ namespace AppInstaller::CLI::Workflow
             return;
         }
 
-        bool downloadInstallerOnly = WI_IsFlagSet(context.GetFlags(), Execution::ContextFlag::InstallerDownloadOnly);
+        bool downloadInstallerOnly = m_downloadOnly ? true : WI_IsFlagSet(context.GetFlags(), Execution::ContextFlag::InstallerDownloadOnly);
 
         // Show all prompts needed for every package before installing anything
         context << Workflow::ShowPromptsForMultiplePackages(m_ensurePackageAgreements, downloadInstallerOnly);
@@ -686,11 +715,11 @@ namespace AppInstaller::CLI::Workflow
             return;
         }
 
+        auto& packageSubContexts = context.Get<Execution::Data::PackageSubContexts>();
+
         // Report dependencies
         if (!m_ignorePackageDependencies)
         {
-            auto& packageSubContexts = context.Get<Execution::Data::PackageSubContexts>();
-
             DependencyList allDependencies;
 
             for (auto& packageContext : packageSubContexts)
@@ -715,10 +744,10 @@ namespace AppInstaller::CLI::Workflow
         }
 
         bool allSucceeded = true;
-        size_t packagesCount = context.Get<Execution::Data::PackageSubContexts>().size();
+        size_t packagesCount = packageSubContexts.size();
         size_t packagesProgress = 0;
 
-        for (auto& packageContext : context.Get<Execution::Data::PackageSubContexts>())
+        for (auto& packageContext : packageSubContexts)
         {
             packagesProgress++;
             context.Reporter.Info() << '(' << packagesProgress << '/' << packagesCount << ") "_liv;
@@ -738,7 +767,7 @@ namespace AppInstaller::CLI::Workflow
                     currentContext <<
                         Workflow::EnableWindowsFeaturesDependencies <<
                         Workflow::CreateDependencySubContexts(m_dependenciesReportMessage) <<
-                        Workflow::ProcessMultiplePackages(m_dependenciesReportMessage, APPINSTALLER_CLI_ERROR_INSTALL_DEPENDENCIES, {}, true, true, true, true);
+                        Workflow::ProcessMultiplePackages(m_dependenciesReportMessage, APPINSTALLER_CLI_ERROR_INSTALL_DEPENDENCIES, Flags::IgnoreDependencies | Flags::StopOnFailure | Flags::RefreshPathVariable);
                 }
 
                 currentContext << Workflow::DownloadInstaller;
@@ -808,7 +837,7 @@ namespace AppInstaller::CLI::Workflow
     }
     CATCH_LOG()
 
-        void ReportARPChanges(Execution::Context& context) try
+    void ReportARPChanges(Execution::Context& context) try
     {
         if (!context.Contains(Execution::Data::ARPCorrelationData))
         {

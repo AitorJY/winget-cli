@@ -135,11 +135,17 @@ namespace AppInstaller::CLI::Workflow
             }
         }
 
-        Utility::Architecture arch = context.Get<Execution::Data::Installer>()->Arch;
+        const auto& installer = context.Get<Execution::Data::Installer>().value();
+        Utility::Architecture arch = installer.Arch;
         const std::string& productCode = GetPortableProductCode(context);
 
         PortableInstaller portableInstaller = PortableInstaller(scope, arch, productCode);
         portableInstaller.IsUpdate = isUpdate;
+
+        if (IsArchiveType(installer.BaseInstallerType) && installer.ArchiveBinariesDependOnPath)
+        {
+            portableInstaller.BinariesDependOnPath = true;
+        }
 
         // Set target install directory
         std::string_view locationArg = context.Args.GetArg(Execution::Args::Type::InstallLocation);
@@ -238,8 +244,9 @@ namespace AppInstaller::CLI::Workflow
 
     void PortableInstallImpl(Execution::Context& context)
     {
+        OperationType installType = WI_IsFlagSet(context.GetFlags(), Execution::ContextFlag::InstallerExecutionUseUpdate) ? OperationType::Upgrade : OperationType::Install;
+        
         PortableInstaller& portableInstaller = context.Get<Execution::Data::PortableInstaller>();
-
         try
         {
             context.Reporter.Info() << Resource::String::InstallFlowStartingPackageInstall << std::endl;
@@ -261,7 +268,7 @@ namespace AppInstaller::CLI::Workflow
                 }
             }
 
-            portableInstaller.Install();
+            portableInstaller.Install(installType);
             context.Add<Execution::Data::OperationReturnCode>(ERROR_SUCCESS);
             context.Reporter.Warn() << portableInstaller.GetOutputMessage();
         }

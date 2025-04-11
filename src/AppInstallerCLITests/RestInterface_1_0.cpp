@@ -11,6 +11,7 @@
 #include <AppInstallerSHA256.h>
 
 using namespace TestCommon;
+using namespace AppInstaller::Http;
 using namespace AppInstaller::Utility;
 using namespace AppInstaller::Manifest;
 using namespace AppInstaller::Repository;
@@ -31,6 +32,54 @@ namespace
             "Versions": [
                 {
                     "PackageVersion": "5.0.0",
+                    "DefaultLocale": {
+                        "PackageLocale": "en-us",
+                        "Publisher": "Foo",
+                        "PackageName": "Bar",
+                        "License": "Foo bar license",
+                        "ShortDescription": "Foo bar description"
+                    },
+                    "Installers": [
+                        {
+                            "Architecture": "x64",
+                            "InstallerSha256": "011048877dfaef109801b3f3ab2b60afc74f3fc4f7b3430e0c897f5da1df84b6",
+                            "InstallerType": "exe",
+                            "InstallerUrl": "https://installer.example.com/foobar.exe"
+                        }
+                    ]
+                }
+            ]
+        }
+    })delimiter");
+    }
+
+    utility::string_t GetManifestsResponse_MultipleVersions()
+    {
+        return _XPLATSTR(
+            R"delimiter({
+        "Data": {
+            "PackageIdentifier": "Foo.Bar",
+            "Versions": [
+                {
+                    "PackageVersion": "5.0.0",
+                    "DefaultLocale": {
+                        "PackageLocale": "en-us",
+                        "Publisher": "Foo",
+                        "PackageName": "Bar",
+                        "License": "Foo bar license",
+                        "ShortDescription": "Foo bar description"
+                    },
+                    "Installers": [
+                        {
+                            "Architecture": "x64",
+                            "InstallerSha256": "011048877dfaef109801b3f3ab2b60afc74f3fc4f7b3430e0c897f5da1df84b6",
+                            "InstallerType": "exe",
+                            "InstallerUrl": "https://installer.example.com/foobar.exe"
+                        }
+                    ]
+                },
+                {
+                    "PackageVersion": "6.0.0",
                     "DefaultLocale": {
                         "PackageLocale": "en-us",
                         "Publisher": "Foo",
@@ -338,6 +387,17 @@ TEST_CASE("Search_GoodResponse_AllFields", "[RestSource][Interface_1_0]")
     REQUIRE(package.Versions.at(0).ProductCodes.at(1) == "pc2");
 }
 
+TEST_CASE("Search_GoodResponse_404AsEmpty", "[RestSource][Interface_1_0]")
+{
+    utility::string_t notFoundResponse = _XPLATSTR(
+        R"delimiter({"code":"DataNotFound","data":[],"details":[],"innererror":{"code":"DataNotFound","data":[],"details":[],"message":"Product is not present","source":"StoreEdgeFD"},"message":"Product is not present","source":"StoreEdgeFD"})delimiter");
+
+    HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::NotFound, std::move(notFoundResponse)) };
+    Interface v1{ TestRestUriString, std::move(helper) };
+    Schema::IRestClient::SearchResult searchResponse = v1.Search({});
+    REQUIRE(searchResponse.Matches.size() == 0);
+}
+
 TEST_CASE("Search_ContinuationToken", "[RestSource][Interface_1_0]")
 {
     utility::string_t sample = _XPLATSTR(
@@ -394,7 +454,7 @@ TEST_CASE("Search_BadResponse_NotFoundCode", "[RestSource][Interface_1_0]")
 {
     HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::NotFound) };
     Interface v1{ TestRestUriString, std::move(helper) };
-    REQUIRE_THROWS_HR(v1.Search({}), APPINSTALLER_CLI_ERROR_RESTSOURCE_ENDPOINT_NOT_FOUND);
+    REQUIRE_THROWS_HR(v1.Search({}), APPINSTALLER_CLI_ERROR_RESTAPI_ENDPOINT_NOT_FOUND);
 }
 
 TEST_CASE("Search_Optimized_ManifestResponse", "[RestSource][Interface_1_0]")
@@ -428,6 +488,22 @@ TEST_CASE("Search_Optimized_ManifestResponse", "[RestSource][Interface_1_0]")
     REQUIRE(manifest.Installers[0].Url == "https://installer.example.com/foobar.exe");
 }
 
+TEST_CASE("Search_Optimized_ManifestResponse_MultipleVersions", "[RestSource][Interface_1_0]")
+{
+    HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::OK, GetManifestsResponse_MultipleVersions()) };
+    AppInstaller::Repository::SearchRequest request;
+    PackageMatchFilter filter{ PackageMatchField::Id, MatchType::Exact, "Foo.Bar" };
+    request.Filters.emplace_back(std::move(filter));
+    Interface v1{ TestRestUriString, std::move(helper) };
+    Schema::IRestClient::SearchResult result = v1.Search(request);
+    REQUIRE(result.Matches.size() == 1);
+    REQUIRE(result.Matches[0].Versions.size() == 2);
+    REQUIRE(result.Matches[0].Versions[0].VersionAndChannel.GetVersion().ToString() == "5.0.0");
+    REQUIRE(result.Matches[0].Versions[0].Manifest);
+    REQUIRE(result.Matches[0].Versions[1].VersionAndChannel.GetVersion().ToString() == "6.0.0");
+    REQUIRE(result.Matches[0].Versions[1].Manifest);
+}
+
 TEST_CASE("Search_Optimized_NoResponse_NotFoundCode", "[RestSource][Interface_1_0]")
 {
     HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::NotFound) };
@@ -435,7 +511,7 @@ TEST_CASE("Search_Optimized_NoResponse_NotFoundCode", "[RestSource][Interface_1_
     PackageMatchFilter filter{ PackageMatchField::Id, MatchType::Exact, "Foo" };
     request.Filters.emplace_back(std::move(filter));
     Interface v1{ TestRestUriString, std::move(helper) };
-    REQUIRE_THROWS_HR(v1.Search(request), APPINSTALLER_CLI_ERROR_RESTSOURCE_ENDPOINT_NOT_FOUND);
+    REQUIRE_THROWS_HR(v1.Search(request), APPINSTALLER_CLI_ERROR_RESTAPI_ENDPOINT_NOT_FOUND);
 }
 
 TEST_CASE("GetManifests_GoodResponse", "[RestSource][Interface_1_0]")
@@ -446,7 +522,7 @@ TEST_CASE("GetManifests_GoodResponse", "[RestSource][Interface_1_0]")
     Interface v1{ TestRestUriString, std::move(helper) };
     std::vector<Manifest> manifests = v1.GetManifests("Foo.Bar");
     REQUIRE(manifests.size() == 1);
-    
+
     // Verify manifest is populated
     Manifest manifest = manifests[0];
     REQUIRE(manifest.Id == "Foo.Bar");
@@ -456,6 +532,29 @@ TEST_CASE("GetManifests_GoodResponse", "[RestSource][Interface_1_0]")
     REQUIRE(manifest.ManifestVersion == AppInstaller::Manifest::ManifestVer{ "1.0.0" });
     sampleManifest.VerifyLocalizations_AllFields(manifest);
     sampleManifest.VerifyInstallers_AllFields(manifest);
+}
+
+TEST_CASE("GetManifests_GoodResponse_404AsEmpty", "[RestSource][Interface_1_0]")
+{
+    utility::string_t notFoundResponse = _XPLATSTR(
+        R"delimiter({"code":"DataNotFound","data":[],"details":[],"innererror":{"code":"DataNotFound","data":[],"details":[],"message":"Product is not present","source":"StoreEdgeFD"},"message":"Product is not present","source":"StoreEdgeFD"})delimiter");
+
+    HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::NotFound, std::move(notFoundResponse)) };
+    Interface v1{ TestRestUriString, std::move(helper) };
+    std::vector<Manifest> manifests = v1.GetManifests("Foo.Bar");
+    REQUIRE(manifests.size() == 0);
+}
+
+TEST_CASE("GetManifests_GoodResponse_MultipleVersions", "[RestSource][Interface_1_0]")
+{
+    HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::OK, GetManifestsResponse_MultipleVersions()) };
+    Interface v1{ TestRestUriString, std::move(helper) };
+
+    // GetManifests
+    std::vector<Manifest> manifests = v1.GetManifests("Foo.Bar");
+    REQUIRE(manifests.size() == 2);
+    REQUIRE(manifests[0].Version == "5.0.0");
+    REQUIRE(manifests[1].Version == "6.0.0");
 }
 
 TEST_CASE("GetManifests_BadResponse_SuccessCode", "[RestSource][Interface_1_0]")
@@ -481,7 +580,7 @@ TEST_CASE("GetManifests_NotFoundCode", "[RestSource][Interface_1_0]")
 {
     HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::NotFound) };
     Interface v1{ TestRestUriString, std::move(helper) };
-    REQUIRE_THROWS_HR(v1.GetManifests("Foo.Bar"), APPINSTALLER_CLI_ERROR_RESTSOURCE_ENDPOINT_NOT_FOUND);
+    REQUIRE_THROWS_HR(v1.GetManifests("Foo.Bar"), APPINSTALLER_CLI_ERROR_RESTAPI_ENDPOINT_NOT_FOUND);
 }
 
 TEST_CASE("GetManifests_GoodResponse_UnknownInstaller", "[RestSource][Interface_1_0]")
@@ -522,4 +621,25 @@ TEST_CASE("GetManifests_GoodResponse_UnknownInstaller", "[RestSource][Interface_
     REQUIRE(manifest.Installers.size() == 1);
     REQUIRE(manifest.Installers.at(0).BaseInstallerType == InstallerTypeEnum::Unknown);
     REQUIRE(manifest.Installers.at(0).ProductId.empty());
+}
+
+TEST_CASE("GetManifestByVersion_GoodResponse_MultipleVersions_VersionFound", "[RestSource][Interface_1_0]")
+{
+    HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::OK, GetManifestsResponse_MultipleVersions()) };
+    Interface v1{ TestRestUriString, std::move(helper) };
+
+    // GetManifests
+    std::optional<Manifest> manifest = v1.GetManifestByVersion("Foo.Bar", "5.0.0", "");
+    REQUIRE(manifest.has_value());
+    REQUIRE(manifest->Version == "5.0.0");
+}
+
+TEST_CASE("GetManifestByVersion_GoodResponse_MultipleVersions_VersionNotFound", "[RestSource][Interface_1_0]")
+{
+    HttpClientHelper helper{ GetTestRestRequestHandler(web::http::status_codes::OK, GetManifestsResponse_MultipleVersions()) };
+    Interface v1{ TestRestUriString, std::move(helper) };
+
+    // GetManifests
+    std::optional<Manifest> manifest = v1.GetManifestByVersion("Foo.Bar", "7.0.0", "");
+    REQUIRE_FALSE(manifest.has_value());
 }

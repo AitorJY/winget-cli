@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="ConfigurationUnitProcessorTests.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -7,15 +7,15 @@
 namespace Microsoft.Management.Configuration.UnitTests.Tests
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Management.Automation;
     using Microsoft.Management.Configuration;
-    using Microsoft.Management.Configuration.Processor.DscResourcesInfo;
     using Microsoft.Management.Configuration.Processor.Helpers;
-    using Microsoft.Management.Configuration.Processor.ProcessorEnvironments;
-    using Microsoft.Management.Configuration.Processor.Unit;
+    using Microsoft.Management.Configuration.Processor.PowerShell.DscResourcesInfo;
+    using Microsoft.Management.Configuration.Processor.PowerShell.Helpers;
+    using Microsoft.Management.Configuration.Processor.PowerShell.ProcessorEnvironments;
+    using Microsoft.Management.Configuration.Processor.PowerShell.Unit;
     using Microsoft.Management.Configuration.UnitTests.Fixtures;
+    using Microsoft.Management.Configuration.UnitTests.Helpers;
     using Microsoft.PowerShell.Commands;
     using Moq;
     using Windows.Foundation.Collections;
@@ -26,6 +26,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     /// Configuration unit processor tests.
     /// </summary>
     [Collection("UnitTestCollection")]
+    [InProc]
     public class ConfigurationUnitProcessorTests
     {
         private readonly UnitTestFixture fixture;
@@ -50,7 +51,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
         [InlineData(ConfigurationUnitIntent.Inform)]
         [InlineData(ConfigurationUnitIntent.Assert)]
         [InlineData(ConfigurationUnitIntent.Apply)]
-        public void GetSettings_Test(ConfigurationUnitIntent intent)
+        public void GetSettings_Test(object intent)
         {
             string theKey = "key";
             string theValue = "value";
@@ -67,9 +68,9 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
                 .Returns(valueGetResult)
                 .Verifiable();
 
-            var unitResource = this.CreateUnitResource(intent);
+            var unitResource = this.CreateUnitResource(Assert.IsType<ConfigurationUnitIntent>(intent));
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.GetSettings();
 
@@ -98,7 +99,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Inform);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.GetSettings();
 
@@ -127,7 +128,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Inform);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.GetSettings();
 
@@ -148,7 +149,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
             var processorEnvMock = new Mock<IProcessorEnvironment>();
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Inform);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             Assert.Throws<NotSupportedException>(() => unitProcessor.TestSettings());
         }
@@ -163,7 +164,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
         [InlineData(ConfigurationUnitIntent.Apply, false)]
         [InlineData(ConfigurationUnitIntent.Assert, true)]
         [InlineData(ConfigurationUnitIntent.Apply, true)]
-        public void TestSettings_TestSucceeded(ConfigurationUnitIntent intent, bool invokeTestResult)
+        public void TestSettings_TestSucceeded(object intent, bool invokeTestResult)
         {
             var processorEnvMock = new Mock<IProcessorEnvironment>();
             processorEnvMock.Setup(m => m.InvokeTestResource(
@@ -173,9 +174,9 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
                 .Returns(invokeTestResult)
                 .Verifiable();
 
-            var unitResource = this.CreateUnitResource(intent);
+            var unitResource = this.CreateUnitResource(Assert.IsType<ConfigurationUnitIntent>(intent));
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var testResult = unitProcessor.TestSettings();
 
@@ -207,7 +208,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Assert);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.TestSettings();
 
@@ -238,7 +239,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Assert);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.TestSettings();
 
@@ -259,12 +260,12 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
         [Theory]
         [InlineData(ConfigurationUnitIntent.Inform)]
         [InlineData(ConfigurationUnitIntent.Assert)]
-        public void ApplySettings_InvalidIntent(ConfigurationUnitIntent intent)
+        public void ApplySettings_InvalidIntent(object intent)
         {
             var processorEnvMock = new Mock<IProcessorEnvironment>();
-            var unitResource = this.CreateUnitResource(intent);
+            var unitResource = this.CreateUnitResource(Assert.IsType<ConfigurationUnitIntent>(intent));
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             Assert.Throws<NotSupportedException>(() => unitProcessor.ApplySettings());
         }
@@ -288,7 +289,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Apply);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.ApplySettings();
 
@@ -312,7 +313,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Apply);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.ApplySettings();
 
@@ -341,7 +342,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 
             var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Apply);
 
-            var unitProcessor = new ConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource);
 
             var result = unitProcessor.ApplySettings();
 
@@ -353,11 +354,49 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
             Assert.Equal(ConfigurationUnitResultSource.Internal, result.ResultInformation.ResultSource);
         }
 
+        /// <summary>
+        /// Tests ApplySettings in limit mode.
+        /// </summary>
+        [Fact]
+        public void ApplySettings_Test_LimitMode()
+        {
+            string theKey = "key";
+            string theValue = "value";
+            var valueGetResult = new ValueSet
+            {
+                { theKey, theValue },
+            };
+
+            var processorEnvMock = new Mock<IProcessorEnvironment>();
+            processorEnvMock.Setup(m => m.InvokeGetResource(
+                It.IsAny<ValueSet>(),
+                It.IsAny<string>(),
+                It.IsAny<ModuleSpecification?>()))
+                .Returns(valueGetResult)
+                .Verifiable();
+
+            var unitResource = this.CreateUnitResource(ConfigurationUnitIntent.Apply);
+
+            var unitProcessor = new PowerShellConfigurationUnitProcessor(processorEnvMock.Object, unitResource, true);
+
+            // GetSettings can be called multiple times.
+            var getResult = unitProcessor.GetSettings();
+            getResult = unitProcessor.GetSettings();
+
+            // TestSettings can be called only once.
+            var testResult = unitProcessor.TestSettings();
+            Assert.Throws<System.InvalidOperationException>(() => unitProcessor.TestSettings());
+
+            // ApplySettings can be called only once.
+            var applyResult = unitProcessor.ApplySettings();
+            Assert.Throws<System.InvalidOperationException>(() => unitProcessor.ApplySettings());
+        }
+
         private ConfigurationUnitAndResource CreateUnitResource(ConfigurationUnitIntent intent)
         {
             string resourceName = "xResourceName";
             return new ConfigurationUnitAndResource(
-                new ConfigurationUnitInternal(
+                new ConfigurationUnitAndModule(
                     new ConfigurationUnit
                     {
                         Type = resourceName,

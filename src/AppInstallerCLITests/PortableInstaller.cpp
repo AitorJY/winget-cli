@@ -21,6 +21,7 @@ using namespace AppInstaller::Repository::Microsoft;
 using namespace AppInstaller::SQLite;
 using namespace AppInstaller::Repository::Microsoft::Schema;
 using namespace AppInstaller::Utility;
+using namespace AppInstaller::CLI::Workflow;
 using namespace TestCommon;
 
 TEST_CASE("PortableInstaller_InstallToRegistry", "[PortableInstaller]")
@@ -44,7 +45,7 @@ TEST_CASE("PortableInstaller_InstallToRegistry", "[PortableInstaller]")
     portableInstaller.SetDesiredState(desiredTestState);
     REQUIRE(portableInstaller.VerifyExpectedState());
 
-    portableInstaller.Install();
+    portableInstaller.Install(AppInstaller::CLI::Workflow::OperationType::Install);
 
     PortableInstaller portableInstaller2 = PortableInstaller(ScopeEnum::User, Architecture::X64, "testProductCode");
     REQUIRE(portableInstaller2.ARPEntryExists());
@@ -92,7 +93,7 @@ TEST_CASE("PortableInstaller_InstallToIndex_CreateInstallRoot", "[PortableInstal
     portableInstaller.SetDesiredState(desiredTestState);
     REQUIRE(portableInstaller.VerifyExpectedState());
 
-    portableInstaller.Install();
+    portableInstaller.Install(AppInstaller::CLI::Workflow::OperationType::Install);
 
     REQUIRE(std::filesystem::exists(installRootPath / portableInstaller.GetPortableIndexFileName()));
     REQUIRE(std::filesystem::exists(targetPath));
@@ -150,7 +151,7 @@ TEST_CASE("PortableInstaller_InstallToIndex_ExistingInstallRoot", "[PortableInst
     portableInstaller.SetDesiredState(desiredTestState);
     REQUIRE(portableInstaller.VerifyExpectedState());
 
-    portableInstaller.Install();
+    portableInstaller.Install(AppInstaller::CLI::Workflow::OperationType::Install);
 
     REQUIRE(std::filesystem::exists(installRootPath / portableInstaller.GetPortableIndexFileName()));
     REQUIRE(std::filesystem::exists(targetPath));
@@ -171,4 +172,41 @@ TEST_CASE("PortableInstaller_InstallToIndex_ExistingInstallRoot", "[PortableInst
     REQUIRE_FALSE(AppInstaller::Filesystem::SymlinkExists(symlinkPath));
     REQUIRE_FALSE(AppInstaller::Filesystem::SymlinkExists(symlinkPath2));
     REQUIRE_FALSE(std::filesystem::exists(directoryPath));
+}
+
+TEST_CASE("PortableInstaller_UnicodeSymlinkPath", "[PortableInstaller]")
+{
+    TempDirectory tempDirectory = TestCommon::TempDirectory("TempDirectory", false);
+
+    // Modify install location path to include unicode characters.
+    std::filesystem::path testInstallLocation = tempDirectory.GetPath() / std::filesystem::path{ ConvertToUTF16("романтический") };
+
+    std::vector<PortableFileEntry> desiredTestState;
+
+    TestCommon::TempFile testPortable("testPortable.txt");
+    std::ofstream file(testPortable, std::ofstream::out);
+    file.close();
+
+    std::filesystem::path targetPath = testInstallLocation / "testPortable.txt";
+    std::filesystem::path symlinkPath = tempDirectory.GetPath() / "testSymlink.exe";
+
+    desiredTestState.emplace_back(std::move(PortableFileEntry::CreateFileEntry(testPortable.GetPath(), targetPath, {})));
+    desiredTestState.emplace_back(std::move(PortableFileEntry::CreateSymlinkEntry(symlinkPath, targetPath)));
+
+    PortableInstaller portableInstaller = PortableInstaller(ScopeEnum::User, Architecture::X64, "testProductCode");
+    portableInstaller.TargetInstallLocation = testInstallLocation;
+    portableInstaller.SetDesiredState(desiredTestState);
+    REQUIRE(portableInstaller.VerifyExpectedState());
+
+    portableInstaller.Install(AppInstaller::CLI::Workflow::OperationType::Install);
+
+    PortableInstaller portableInstaller2 = PortableInstaller(ScopeEnum::User, Architecture::X64, "testProductCode");
+    REQUIRE(portableInstaller2.ARPEntryExists());
+    REQUIRE(std::filesystem::exists(portableInstaller2.PortableTargetFullPath));
+    REQUIRE(AppInstaller::Filesystem::SymlinkExists(portableInstaller2.PortableSymlinkFullPath));
+
+    portableInstaller2.Uninstall();
+    REQUIRE_FALSE(std::filesystem::exists(portableInstaller2.PortableTargetFullPath));
+    REQUIRE_FALSE(AppInstaller::Filesystem::SymlinkExists(portableInstaller2.PortableSymlinkFullPath));
+    REQUIRE_FALSE(std::filesystem::exists(portableInstaller2.InstallLocation));
 }

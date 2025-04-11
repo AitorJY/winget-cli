@@ -4,6 +4,7 @@
 #include "RepairCommand.h"
 #include "Workflows/RepairFlow.h"
 #include "Workflows/CompletionFlow.h"
+#include "Workflows/DownloadFlow.h"
 #include "Workflows/InstallFlow.h"
 
 namespace AppInstaller::CLI
@@ -94,6 +95,7 @@ namespace AppInstaller::CLI
         context.SetFlags(Execution::ContextFlag::InstallerExecutionUseRepair);
 
         context <<
+            Workflow::InitializeInstallerDownloadAuthenticatorsMap <<
             Workflow::ReportExecutionStage(ExecutionStage::Discovery) <<
             Workflow::OpenSource() <<
             Workflow::OpenCompositeSource(DetermineInstalledSource(context));
@@ -104,11 +106,7 @@ namespace AppInstaller::CLI
                 Workflow::GetManifestFromArg <<
                 Workflow::ReportManifestIdentity <<
                 Workflow::SearchSourceUsingManifest <<
-                Workflow::EnsureOneMatchFromSearchResult(OperationType::Repair) <<
-                Workflow::GetInstalledPackageVersion <<
-                Workflow::SelectInstaller <<
-                Workflow::EnsureApplicableInstaller <<
-                Workflow::RepairSinglePackage;
+                Workflow::EnsureOneMatchFromSearchResult(OperationType::Repair);
         }
         else
         {
@@ -116,10 +114,12 @@ namespace AppInstaller::CLI
                 Workflow::SearchSourceForSingle <<
                 Workflow::HandleSearchResultFailures <<
                 Workflow::EnsureOneMatchFromSearchResult(OperationType::Repair) <<
-                Workflow::ReportPackageIdentity <<
-                Workflow::GetInstalledPackageVersion <<
-                Workflow::SelectApplicablePackageVersion <<
-                Workflow::RepairSinglePackage;
+                Workflow::ReportPackageIdentity;
         }
+
+        context <<
+            Workflow::GetInstalledPackageVersion <<
+            Workflow::SelectApplicableInstallerIfNecessary <<
+            Workflow::RepairSinglePackage;
     }
 }

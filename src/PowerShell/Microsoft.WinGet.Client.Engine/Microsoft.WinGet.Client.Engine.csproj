@@ -1,18 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- If these target frameworks are updated, make sure to also update the .psd1 and .nuspec files.-->
     <!-- Keep in sync with attributes in AssemblyInfo.cs -->
-    <TargetWindowsVersion>10.0.22000.0</TargetWindowsVersion>
-    <CoreFramework>net6.0-windows$(TargetWindowsVersion)</CoreFramework>
+    <TargetWindowsVersion>10.0.26100.0</TargetWindowsVersion>
+    <CoreFramework>net8.0-windows$(TargetWindowsVersion)</CoreFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <DesktopFramework>net48</DesktopFramework>
     <Configurations>Debug;Release;ReleaseStatic</Configurations>
+    <CsWinRTCcwLookupTableGeneratorEnabled>false</CsWinRTCcwLookupTableGeneratorEnabled>
+    <!--
+    !!! Remove or update this on the next Microsoft.Windows.CsWinRT package version update. !!!
+    -->
+    <WindowsSdkPackageVersion>10.0.26100.53</WindowsSdkPackageVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>10</LangVersion>
     <BuildOutputDirectory>$(SolutionDir)$(Platform)\$(Configuration)\</BuildOutputDirectory>
     <OutputPath>$(BuildOutputDirectory)$(MSBuildProjectName)</OutputPath>
     <TargetFrameworks>$(CoreFramework);$(DesktopFramework)</TargetFrameworks>
@@ -47,10 +51,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" Condition="'$(TargetFramework)' == '$(DesktopFramework)'" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4" Condition="'$(TargetFramework)' == '$(CoreFramework)'" />
-    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.22000.196" PrivateAssets="all" Condition="'$(TargetFramework)' == '$(DesktopFramework)'" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.6" Condition="'$(TargetFramework)' == '$(CoreFramework)'" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.1742" PrivateAssets="all" Condition="'$(TargetFramework)' == '$(DesktopFramework)'" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="'$(TargetFramework)' == '$(DesktopFramework)'" />
   </ItemGroup>
 
@@ -89,10 +93,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == '$(CoreFramework)'">
-    <RuntimeIdentifier>win10</RuntimeIdentifier>
+    <RuntimeIdentifier>win</RuntimeIdentifier>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == '$(DesktopFramework)'">
+    <LangVersion>10</LangVersion>
     <DefineConstants>$(DefineConstants);POWERSHELL_WINDOWS</DefineConstants>
   </PropertyGroup>
 
@@ -112,8 +117,32 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Import Project="..\..\targets\EmbeddedCsWinRT.targets" Condition="'$(TargetFramework)' == '$(CoreFramework)'" />
+
   <PropertyGroup Condition="'$(TargetFramework)' == '$(CoreFramework)'">
-    <CsWinRTIncludes>Microsoft.Management.Deployment</CsWinRTIncludes>
+    <CsWinRTIncludes>
+      Microsoft.Management.Deployment;
+      Windows.Data.Text.TextSegmen;
+      Windows.Devices.Geolocation;
+      Windows.Foundation;
+      Windows.Globalization.DayOfWee;
+      Windows.Networking.Connectivity;
+      Windows.Networking.DomainNameTyp;
+      Windows.Networking.EndpointPai;
+      Windows.Networking.IEndpointPai;
+      Windows.Networking.HostNam;
+      Windows.Networking.IHostNam;
+      Windows.Security.Cryptography.Certificates;
+      Windows.Storage;
+      Windows.Storage.Provider.FileUpdateStatu;
+      Windows.System.ProcessorArchitectur;
+      Windows.System.Use;
+      Windows.System.IUse;
+    </CsWinRTIncludes>
+    <CsWinRTExcludes>
+      Windows.Foundation.PropertyType;
+      Windows.Storage.Provider;
+    </CsWinRTExcludes>
     <CsWinRTWindowsMetadata>$(TargetWindowsVersion)</CsWinRTWindowsMetadata>
     <!-- Ensure Support for Windows 10, Version 1809 -->
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>

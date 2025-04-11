@@ -20,6 +20,7 @@ namespace AppInstaller::Logging
         case Channel::Core:   return "CORE";
         case Channel::Test:   return "TEST";
         case Channel::Config: return "CONF";
+        case Channel::Workflow: return "WORK";
         default:              return "NONE";
         }
     }
@@ -59,6 +60,10 @@ namespace AppInstaller::Logging
         else if (lowerChannel == "conf" || lowerChannel == "config")
         {
             return Channel::Config;
+        }
+        else if (lowerChannel == "workflow")
+        {
+            return Channel::Workflow;
         }
         else if (lowerChannel == "default" || lowerChannel == "defaults")
         {
@@ -117,6 +122,11 @@ namespace AppInstaller::Logging
     void DiagnosticLogger::EnableChannel(Channel channel)
     {
         WI_SetAllFlags(m_enabledChannels, channel);
+    }
+
+    void DiagnosticLogger::SetEnabledChannels(Channel channel)
+    {
+        m_enabledChannels = channel;
     }
 
     void DiagnosticLogger::DisableChannel(Channel channel)

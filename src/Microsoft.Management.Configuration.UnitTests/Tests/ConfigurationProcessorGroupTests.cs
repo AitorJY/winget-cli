@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="ConfigurationProcessorGroupTests.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -19,6 +19,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     /// Unit tests for running group processing.
     /// </summary>
     [Collection("UnitTestCollection")]
+    [InProc]
     public class ConfigurationProcessorGroupTests : ConfigurationProcessorTestBase
     {
         /// <summary>

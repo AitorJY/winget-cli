@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="DscModuleV2Tests.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -9,9 +9,9 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     using System;
     using System.IO;
     using System.Management.Automation;
-    using Microsoft.Management.Configuration.Processor.DscModule;
     using Microsoft.Management.Configuration.Processor.Exceptions;
-    using Microsoft.Management.Configuration.Processor.Helpers;
+    using Microsoft.Management.Configuration.Processor.PowerShell.DscModules;
+    using Microsoft.Management.Configuration.Processor.PowerShell.Helpers;
     using Microsoft.Management.Configuration.UnitTests.Fixtures;
     using Microsoft.Management.Configuration.UnitTests.Helpers;
     using Microsoft.PowerShell.Commands;
@@ -24,6 +24,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     /// Tests DscModuleV2 with really simple resources.
     /// </summary>
     [Collection("UnitTestCollection")]
+    [InProc]
     public class DscModuleV2Tests
     {
         private readonly UnitTestFixture fixture;

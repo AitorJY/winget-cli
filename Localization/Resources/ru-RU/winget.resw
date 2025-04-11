@@ -262,7 +262,7 @@
     <value>Фильтровать результаты по идентификатору</value>
   </data>
   <data name="IgnoreWarningsArgumentDescription" xml:space="preserve">
-    <value>Подавляет вывод предупреждений.</value>
+    <value>Подавляет вывод предупреждений</value>
   </data>
   <data name="InstallationDisclaimer1" xml:space="preserve">
     <value>Лицензия на это приложение предоставлена вам владельцем.</value>
@@ -861,7 +861,7 @@
     <value>Игнорировать недоступные пакеты</value>
   </data>
   <data name="ExportIncludeVersionsArgumentDescription" xml:space="preserve">
-    <value>Включить версии пакетов в созданный файл</value>
+    <value>Включить версии пакетов в файл экспорта</value>
   </data>
   <data name="ImportIgnoreVersionsArgumentDescription" xml:space="preserve">
     <value>Игнорировать версии пакета из файла импорта</value>
@@ -1173,6 +1173,9 @@
   <data name="ShowLabelInstallerReleaseDate" xml:space="preserve">
     <value>Дата выпуска:</value>
   </data>
+  <data name="ShowLabelInstallerOfflineDistributionSupported" xml:space="preserve">
+    <value>Поддерживается автономное распространение:</value>
+  </data>
   <data name="ShowLabelPublisherUrl" xml:space="preserve">
     <value>URL-адрес издателя:</value>
   </data>
@@ -1280,6 +1283,9 @@
   </data>
   <data name="InstallFlowReturnCodeSystemNotSupported" xml:space="preserve">
     <value>Текущая конфигурация системы не поддерживает установку этого пакета.</value>
+  </data>
+  <data name="InstallFlowReturnCodeCustomError" xml:space="preserve">
+    <value>Сбой установки из-за ошибки настраиваемого установщика. Обратитесь в службу поддержки пакета.</value>
   </data>
   <data name="InstallAbandoned" xml:space="preserve">
     <value>Установка прервана</value>
@@ -1806,6 +1812,9 @@
   <data name="ConfigurationSuccessfullyApplied" xml:space="preserve">
     <value>Конфигурация применена.</value>
   </data>
+  <data name="ConfigurationUnitSuccessfullyApplied" xml:space="preserve">
+    <value>Элемент успешно применен.</value>
+  </data>
   <data name="ConfigurationWaitingOnAnother" xml:space="preserve">
     <value>К системе применяется другая конфигурация. Эта конфигурация будет продолжена, как только это будет возможно...</value>
   </data>
@@ -2272,14 +2281,14 @@
   <data name="APPINSTALLER_CLI_ERROR_BLOCKED_BY_POLICY" xml:space="preserve">
     <value>Операция заблокирована групповой политикой</value>
   </data>
-  <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_INTERNAL_ERROR" xml:space="preserve">
-    <value>Внутренняя ошибка источника REST</value>
+  <data name="APPINSTALLER_CLI_ERROR_RESTAPI_INTERNAL_ERROR" xml:space="preserve">
+    <value>Внутренняя ошибка REST API</value>
   </data>
   <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_INVALID_URL" xml:space="preserve">
     <value>Недопустимый URL-адрес источника REST</value>
   </data>
-  <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_UNSUPPORTED_MIME_TYPE" xml:space="preserve">
-    <value>Источник REST вернул неподдерживаемый тип MIME</value>
+  <data name="APPINSTALLER_CLI_ERROR_RESTAPI_UNSUPPORTED_MIME_TYPE" xml:space="preserve">
+    <value>REST API вернул неподдерживаемый тип MIME</value>
   </data>
   <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_INVALID_VERSION" xml:space="preserve">
     <value>Недопустимая версия контракта источника REST</value>
@@ -2299,8 +2308,8 @@
   <data name="APPINSTALLER_CLI_ERROR_UNSUPPORTED_SOURCE_REQUEST" xml:space="preserve">
     <value>Запрос поиска не поддерживается одним или несколькими источниками</value>
   </data>
-  <data name="APPINSTALLER_CLI_ERROR_RESTSOURCE_ENDPOINT_NOT_FOUND" xml:space="preserve">
-    <value>Конечная точка источника REST не найдена.</value>
+  <data name="APPINSTALLER_CLI_ERROR_RESTAPI_ENDPOINT_NOT_FOUND" xml:space="preserve">
+    <value>Конечная точка REST API не найдена.</value>
   </data>
   <data name="APPINSTALLER_CLI_ERROR_SOURCE_OPEN_FAILED" xml:space="preserve">
     <value>Не удалось открыть источник.</value>
@@ -2517,6 +2526,9 @@
   </data>
   <data name="APPINSTALLER_CLI_ERROR_INSTALL_UPGRADE_NOT_SUPPORTED" xml:space="preserve">
     <value>Установщик не поддерживает обновление существующего пакета.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_INSTALL_CUSTOM_ERROR" xml:space="preserve">
+    <value>Установка завершилась сбоем из-за ошибки пользовательского установщика.</value>
   </data>
   <data name="WINGET_INSTALLED_STATUS_ARP_ENTRY_NOT_FOUND" xml:space="preserve">
     <value>Не удалось найти запись "Приложения и компоненты" для пакета.</value>
@@ -2813,5 +2825,383 @@
   <data name="RepairFailedWithCode" xml:space="preserve">
     <value>Сбой восстановления с кодом выхода: {0}</value>
     <comment>{Locked="{0}"} Error message displayed when an attempt to repair an application package fails. {0} is a placeholder replaced by an error code.</comment>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_SQLITE_CONNECTION_TERMINATED" xml:space="preserve">
+    <value>Подключение SQLite было разорвано для предотвращения повреждения.</value>
+  </data>
+  <data name="UninstallAllVersionsArgumentDescription" xml:space="preserve">
+    <value>Удалить все версии</value>
+  </data>
+  <data name="TargetVersionArgumentDescription" xml:space="preserve">
+    <value>Версия для действий</value>
+  </data>
+  <data name="UninstallFailedDueToMultipleVersions" xml:space="preserve">
+    <value>Установлено несколько версий этого пакета. Уточните условия поиска, передайте аргумент "--version", чтобы выбрать его, или передайте флаг "--all-versions", чтобы удалить все из них.</value>
+    <comment>{Locked="--version,--all-versions"}</comment>
+  </data>
+  <data name="PolicyEnableProxyCommandLineOptions" xml:space="preserve">
+    <value>Включить Диспетчер пакетов Windows командной строки прокси-сервера</value>
+    <comment>Describes a Group Policy that can enable the use of the --proxy option to set a proxy</comment>
+  </data>
+  <data name="ProxyArgumentDescription" xml:space="preserve">
+    <value>Задать прокси-сервер для этого выполнения</value>
+  </data>
+  <data name="NoProxyArgumentDescription" xml:space="preserve">
+    <value>Отключить использование прокси-сервера для этого выполнения</value>
+  </data>
+  <data name="ResetAdminSettingFailed" xml:space="preserve">
+    <value>Не удается сбросить {0}. Этот параметр управляется политикой. Для получения дополнительных сведений обратитесь к системному администратору.</value>
+    <comment>{Locked="{0}"} The value will be replaced with the feature name</comment>
+  </data>
+  <data name="ResetAdminSettingSucceeded" xml:space="preserve">
+    <value>Сброс параметра администратора "{0}".</value>
+    <comment>{Locked="{0}"} Message displayed after the user resets an admin setting to its default value. Reset is used as verb in past tense. {0} is a placeholder replaced by the setting name.</comment>
+  </data>
+  <data name="SetAdminSettingFailed" xml:space="preserve">
+    <value>Невозможно задать {0}. Этот параметр управляется политикой. Для получения дополнительных сведений обратитесь к системному администратору.</value>
+    <comment>{Locked="{0}"} The value will be replaced with the feature name</comment>
+  </data>
+  <data name="SetAdminSettingSucceeded" xml:space="preserve">
+    <value>Задайте для параметра администратора "{0}" значение "{1}".</value>
+    <comment>{Locked="{0}"} Message displayed after the user sets the value of an admin setting. Set is used as a verb in past tense. {0} is a placeholder replaced by the setting name. {1} is a placeholder replaced </comment>
+  </data>
+  <data name="SettingNameArgumentDescription" xml:space="preserve">
+    <value>Имя изменяемого параметра</value>
+  </data>
+  <data name="SettingValueArgumentDescription" xml:space="preserve">
+    <value>Значение, настраиваемое для параметра.</value>
+  </data>
+  <data name="SettingsResetCommandLongDescription" xml:space="preserve">
+    <value>Сбрасывает значение по умолчанию для параметра администратора.</value>
+  </data>
+  <data name="SettingsResetCommandShortDescription" xml:space="preserve">
+    <value>Сбрасывает значение по умолчанию для параметра администратора.</value>
+  </data>
+  <data name="SettingsSetCommandLongDescription" xml:space="preserve">
+    <value>Задает значение параметра администратора.</value>
+  </data>
+  <data name="SettingsSetCommandShortDescription" xml:space="preserve">
+    <value>Задает значение параметра администратора.</value>
+  </data>
+  <data name="SourceExplicitArgumentDescription" xml:space="preserve">
+    <value>Исключает источник из обнаружения, если не указано</value>
+  </data>
+  <data name="SourceListExplicit" xml:space="preserve">
+    <value>Возрастные ограничения</value>
+  </data>
+  <data name="SourceTrustLevelArgumentDescription" xml:space="preserve">
+    <value>Уровень доверия источника (нет или недоверенный)</value>
+  </data>
+  <data name="SourceListTrustLevel" xml:space="preserve">
+    <value>Уровень доверия</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_DISPLAYCATALOG_API_FAILED" xml:space="preserve">
+    <value>Не удалось получить каталог пакетов Microsoft Store.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_NO_APPLICABLE_DISPLAYCATALOG_PACKAGE" xml:space="preserve">
+    <value>Применимый пакет Microsoft Store не найден в каталоге пакетов Microsoft Store.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_SFSCLIENT_API_FAILED" xml:space="preserve">
+    <value>Не удалось получить сведения о скачивании пакета Microsoft Store.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_NO_APPLICABLE_SFSCLIENT_PACKAGE" xml:space="preserve">
+    <value>Не найден применимый Microsoft Store для скачивания.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_LICENSING_API_FAILED" xml:space="preserve">
+    <value>Не удалось получить лицензию пакета Microsoft Store.</value>
+  </data>
+  <data name="MSStoreDownloadNoApplicablePackageFound" xml:space="preserve">
+    <value>Применимый пакет Microsoft Store не найден.</value>
+  </data>
+  <data name="MSStoreDownloadPackageHashVerified" xml:space="preserve">
+    <value>Хэш пакета Microsoft Store успешно проверен</value>
+  </data>
+  <data name="MSStoreDownloadPackageHashMismatch" xml:space="preserve">
+    <value>Несоответствие хэша пакета Microsoft Store</value>
+  </data>
+  <data name="MSStoreDownloadPackageDownloaded" xml:space="preserve">
+    <value>Пакет Microsoft Store скачан: {0}</value>
+    <comment>{Locked="{0}"} Full path of the downloaded package.</comment>
+  </data>
+  <data name="MSStoreDownloadPackageDownloadFailed" xml:space="preserve">
+    <value>Не удалось скачать пакет Microsoft Store: {0}</value>
+    <comment>{Locked="{0}"} Package name.</comment>
+  </data>
+  <data name="MSStoreDownloadPackageDownloadSuccess" xml:space="preserve">
+    <value>Скачивание пакета Microsoft Store завершено</value>
+  </data>
+  <data name="MSStoreDownloadMainPackages" xml:space="preserve">
+    <value>Скачивание основных пакетов из Microsoft Store...</value>
+  </data>
+  <data name="MSStoreDownloadDependencyPackages" xml:space="preserve">
+    <value>Скачивание пакетов зависимостей из Microsoft Store...</value>
+  </data>
+  <data name="MSStoreDownloadGetDownloadInfo" xml:space="preserve">
+    <value>Получение сведений о скачивании пакета Microsoft Store</value>
+  </data>
+  <data name="MSStoreDownloadGetDownloadInfoFailed" xml:space="preserve">
+    <value>Не удалось получить сведения о скачивании пакета Microsoft Store</value>
+  </data>
+  <data name="MSStoreDownloadGetLicense" xml:space="preserve">
+    <value>Получение лицензии пакета Microsoft Store</value>
+  </data>
+  <data name="MSStoreDownloadGetLicenseSuccess" xml:space="preserve">
+    <value>Лицензия пакета Microsoft Store сохранена: {0}</value>
+    <comment>{Locked="{0}"} License file full path.</comment>
+  </data>
+  <data name="MSStoreDownloadGetLicenseFailed" xml:space="preserve">
+    <value>Не удалось получить лицензию пакета Microsoft Store</value>
+  </data>
+  <data name="MSStoreDownloadRenameNotSupported" xml:space="preserve">
+    <value>Скачивание пакета Microsoft Store не поддерживает аргумент --rename. Пакет Microsoft Store будет использовать имена, предоставленные каталогом Microsoft Store.</value>
+    <comment>{Locked="--rename"}</comment>
+  </data>
+  <data name="MSStoreDownloadAuthenticationNotice" xml:space="preserve">
+    <value>Microsoft Store загрузки пакета требуется Microsoft Entra проверки подлинности. При необходимости может появиться запрос проверки подлинности. Сведения, прошедшие проверку подлинности, будут предоставлены службы Майкрософт для авторизации доступа. Для Microsoft Store лицензирования пакетов учетная запись Microsoft Entra идентификатора должна быть членом глобального администратора, администратора пользователей или администратора лицензий.</value>
+    <comment>{Locked="Global Administrator,User Administrator,License Administrator"}</comment>
+  </data>
+  <data name="SkipMicrosoftStorePackageLicenseArgumentDescription" xml:space="preserve">
+    <value>Пропускает получение автономной лицензии пакета Microsoft Store</value>
+  </data>
+  <data name="PlatformArgumentDescription" xml:space="preserve">
+    <value>Выбор целевой платформы</value>
+  </data>
+  <data name="ConfigurationExportAddingToFile" xml:space="preserve">
+    <value>Добавление файла конфигурации: {0}</value>
+    <comment>{Locked="{0}"}</comment>
+  </data>
+  <data name="ConfigurationExportSuccessful" xml:space="preserve">
+    <value>Экспорт успешно выполнен</value>
+  </data>
+  <data name="ConfigurationGettingResourceSettings" xml:space="preserve">
+    <value>Получение параметров конфигурации...</value>
+  </data>
+  <data name="ConfigureExportArgumentRequiredError" xml:space="preserve">
+    <value>Необходимо указать хотя бы --packageId и (или) --module с параметром --resource. Либо используйте --all для экспорта всех конфигураций пакетов.</value>
+    <comment>{Locked="--packageId,--module, --resource, --all"}</comment>
+  </data>
+  <data name="ConfigureExportArgumentConflictWithAllError" xml:space="preserve">
+    <value>Аргументы --packageId, --module и --resource нельзя использовать с параметром --all.</value>
+    <comment>{Locked="--packageId,--module, --resource, --all"}</comment>
+  </data>
+  <data name="ConfigureExportCommandLongDescription" xml:space="preserve">
+    <value>Экспорт ресурсов конфигурации в файл конфигурации. При использовании с --all выполняется экспорт всех конфигураций пакетов. При использовании с --packageId выполняется экспорт ресурса WinGetPackage указанного идентификатора пакета. При использовании с --module и --resource обеспечивается получение параметров ресурса и его экспорт в файл конфигурации. Если выходной файл конфигурации уже существует, добавляет экспортированные ресурсы конфигурации.</value>
+    <comment>{Locked="WinGetPackage,--packageId,--module, --resource"}</comment>
+  </data>
+  <data name="ConfigureExportCommandShortDescription" xml:space="preserve">
+    <value>Экспорт ресурсов конфигурации в файл конфигурации.</value>
+  </data>
+  <data name="ConfigureExportModule" xml:space="preserve">
+    <value>Модуль ресурса для экспорта.</value>
+  </data>
+  <data name="ConfigureExportPackageId" xml:space="preserve">
+    <value>Идентификатор пакета для экспорта.</value>
+  </data>
+  <data name="ConfigureExportResource" xml:space="preserve">
+    <value>Ресурс конфигурации для экспорта.</value>
+  </data>
+  <data name="ConfigureExportAll" xml:space="preserve">
+    <value>Экспортирует все конфигурации пакетов.</value>
+  </data>
+  <data name="WINGET_CONFIG_ERROR_GET_FAILED" xml:space="preserve">
+    <value>Единице конфигурации не удалось получить свойства.</value>
+  </data>
+  <data name="ConfigurationExportFailed" xml:space="preserve">
+    <value>Не удалось экспортировать конфигурацию.</value>
+  </data>
+  <data name="ConfigureExportUnitDescription" xml:space="preserve">
+    <value>{0}: настройка</value>
+    <comment>{Locked="{0}"}</comment>
+  </data>
+  <data name="ConfigureExportUnitInstallDescription" xml:space="preserve">
+    <value>Установить {0}</value>
+    <comment>{Locked="{0}"}</comment>
+  </data>
+  <data name="ConfigurationWarningSetViewTruncated" xml:space="preserve">
+    <value>Некоторые данные в файле конфигурации были усечены для этого вывода; проверьте содержимое файла на наличие полного содержимого.</value>
+  </data>
+  <data name="ConfigurationWarningValueTruncated" xml:space="preserve">
+    <value>&lt;это значение было усечено; проверьте содержимое файла на наличие полного текста&gt;</value>
+    <comment>Keep some form of separator like the "&lt;&gt;" around the text so that it stands out from the preceding text.</comment>
+  </data>
+  <data name="ConfigureListCommandLongDescription" xml:space="preserve">
+    <value>Отображение сведений о конфигурациях высокого уровня, которые были применены к системе. Эти данные можно использовать с командами `configure` для получения дополнительных сведений.</value>
+    <comment>{Locked="`configure`"}</comment>
+  </data>
+  <data name="ConfigureListCommandShortDescription" xml:space="preserve">
+    <value>Отображает журнал конфигурации</value>
+  </data>
+  <data name="ConfigurationHistoryEmpty" xml:space="preserve">
+    <value>В журнале нет конфигураций.</value>
+  </data>
+  <data name="ConfigurationHistoryItemArgumentDescription" xml:space="preserve">
+    <value>Выбор элементов из журнала</value>
+  </data>
+  <data name="ConfigurationHistoryItemNotFound" xml:space="preserve">
+    <value>Не удалось найти одну конфигурацию, соответствующую предоставленным данным. Укажите полное имя или часть идентификатора, однозначно соответствующую требуемой конфигурации.</value>
+  </data>
+  <data name="ConfigurationHistoryRemoveArgumentDescription" xml:space="preserve">
+    <value>Удалить элемент из журнала</value>
+  </data>
+  <data name="ConfigureListFirstApplied" xml:space="preserve">
+    <value>Первое применение</value>
+    <comment>Column header for date values indicating when a configuration was first applied to the system.</comment>
+  </data>
+  <data name="ConfigureListIdentifier" xml:space="preserve">
+    <value>Идентификатор</value>
+  </data>
+  <data name="ConfigureListName" xml:space="preserve">
+    <value>Имя</value>
+  </data>
+  <data name="ConfigureListOrigin" xml:space="preserve">
+    <value>Источник</value>
+  </data>
+  <data name="ConfigureListPath" xml:space="preserve">
+    <value>Путь</value>
+  </data>
+  <data name="WINGET_CONFIG_ERROR_HISTORY_ITEM_NOT_FOUND" xml:space="preserve">
+    <value>Не удалось найти указанную конфигурацию.</value>
+  </data>
+  <data name="ConfigurationSetStateCompleted" xml:space="preserve">
+    <value>Завершено</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationSetStateInProgress" xml:space="preserve">
+    <value>Выполняется</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationSetStatePending" xml:space="preserve">
+    <value>Ожидание</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationSetStateUnknown" xml:space="preserve">
+    <value>Неизвестно</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationStatusWatchArgumentDescription" xml:space="preserve">
+    <value>Отслеживайте состояние конфигурации.</value>
+    <comment>As in "to monitor the status of a configuration being applied".</comment>
+  </data>
+  <data name="ConfigurationUnitStateCompleted" xml:space="preserve">
+    <value>Завершено</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStateInProgress" xml:space="preserve">
+    <value>Выполняется</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStatePending" xml:space="preserve">
+    <value>Ожидание</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStateSkipped" xml:space="preserve">
+    <value>Пропущено</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigurationUnitStateUnknown" xml:space="preserve">
+    <value>Неизвестно</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigureListApplyBegun" xml:space="preserve">
+    <value>Применение начато</value>
+    <comment>When the configuration application started.</comment>
+  </data>
+  <data name="ConfigureListApplyEnded" xml:space="preserve">
+    <value>Применение завершено</value>
+    <comment>When the configuration application ended.</comment>
+  </data>
+  <data name="ConfigureListResult" xml:space="preserve">
+    <value>Результат</value>
+  </data>
+  <data name="ConfigureListResultDescription" xml:space="preserve">
+    <value>Подробности</value>
+  </data>
+  <data name="ConfigureListState" xml:space="preserve">
+    <value>Область/край</value>
+    <comment>The state of processing an item.</comment>
+  </data>
+  <data name="ConfigureListUnit" xml:space="preserve">
+    <value>Единица</value>
+  </data>
+  <data name="StoreInstall_PackageNotAvailableForCurrentSystem" xml:space="preserve">
+    <value>Пакет несовместим с текущей версией Windows или платформой.</value>
+  </data>
+  <data name="ConfigurationSuppressPrologueArgumentDescription" xml:space="preserve">
+    <value>По возможности не отображать сведения о начальной конфигурации</value>
+  </data>
+  <data name="MSStoreDownloadMultiplePackagesNotice" xml:space="preserve">
+    <value>Можно Microsoft Store несколько пакетов, нацеленных на разные платформы и архитектуры. --platform, --architecture можно использовать для фильтрации пакетов.</value>
+    <comment>{Locked="--platform--architecture"}</comment>
+  </data>
+  <data name="MSStoreDownloadGetLicenseForbidden" xml:space="preserve">
+    <value>Не удалось получить Microsoft Store пакета. Учетная Microsoft Entra идентификатора не является членом группы "Глобальный администратор", "Администратор пользователей" или "Администратор лицензий". Используйте --skip-license, чтобы пропустить получение Microsoft Store пакета.</value>
+    <comment>{Locked="Global Administrator,User Administrator,License Administrator,--skip-license"}</comment>
+  </data>
+  <data name="MSStoreDownloadPackageDownloadNotSupported" xml:space="preserve">
+    <value>Пакет Microsoft Store не поддерживает скачивание.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_SFSCLIENT_PACKAGE_NOT_SUPPORTED" xml:space="preserve">
+    <value>Пакет Microsoft Store не поддерживает скачивание.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_LICENSING_API_FAILED_FORBIDDEN" xml:space="preserve">
+    <value>Не удалось получить Microsoft Store пакета. Учетная Microsoft Entra идентификатора учетной записи не имеет необходимых привилегий.</value>
+  </data>
+  <data name="WINGET_CONFIG_ERROR_PARAMETER_INTEGRITY_BOUNDARY" xml:space="preserve">
+    <value>Параметр нельзя передать через границу целостности.</value>
+  </data>
+  <data name="APPINSTALLER_CLI_ERROR_INSTALLER_ZERO_BYTE_FILE" xml:space="preserve">
+    <value>Скачан установщик нулевого байта. Убедитесь, что ваше сетевое подключение работает правильно.</value>
+  </data>
+  <data name="InstallerZeroByteFile" xml:space="preserve">
+    <value>Скачан установщик нулевого байта. Убедитесь, что ваше сетевое подключение работает правильно.</value>
+  </data>
+  <data name="FontCommandShortDescription" xml:space="preserve">
+    <value>Управление шрифтами</value>
+  </data>
+  <data name="FontCommandLongDescription" xml:space="preserve">
+    <value>Управляйте шрифтами с помощью подкоманд. Шрифты можно устанавливать, обновлять и удалять, как пакеты. </value>
+  </data>
+  <data name="FontFamily" xml:space="preserve">
+    <value>Семейство</value>
+  </data>
+  <data name="FontFaces" xml:space="preserve">
+    <value>Лица</value>
+    <comment>"Faces" represents the typeface of the font family such as 'Bold' or 'Italic'</comment>
+  </data>
+  <data name="FontFamilyNameArgumentDescription" xml:space="preserve">
+    <value>Фильтровать результаты по фамилии</value>
+  </data>
+  <data name="FontFace" xml:space="preserve">
+    <value>Лицо</value>
+    <comment>"Face" represents the typeface of a font family such as 'Bold' or 'Italic'</comment>
+  </data>
+  <data name="FontFilePaths" xml:space="preserve">
+    <value>Пути</value>
+  </data>
+  <data name="NoInstalledFontFound" xml:space="preserve">
+    <value>Ни один установленный шрифт не соответствует заданному критерию.</value>
+  </data>
+  <data name="FontListCommandShortDescription" xml:space="preserve">
+    <value>Получить список установленных шрифтов</value>
+  </data>
+  <data name="FontListCommandLongDescription" xml:space="preserve">
+    <value>Перечислите все установленные шрифты или полные сведения о конкретном шрифте.</value>
+  </data>
+  <data name="FontVersion" xml:space="preserve">
+    <value>Версия</value>
+  </data>
+  <data name="ConfigurationModules" xml:space="preserve">
+    <value>Модули конфигурации</value>
+    <comment>PowerShell Modules that are used for the Configuration feature</comment>
+  </data>
+  <data name="InstallerDownloadRequiresAuthentication" xml:space="preserve">
+    <value>Установщику пакета требуется проверка подлинности. При необходимости может появиться запрос проверки подлинности. Сведения, прошедшие проверку подлинности, будут предоставлены с URL-адресом скачивания установщика.</value>
+  </data>
+  <data name="InstallerDownloadAuthenticationNotSupported" xml:space="preserve">
+    <value>Не удалось скачать установщик. Эта winget не поддерживает метод проверки подлинности скачивания установщиком. Попробуйте обновиться до последней winget версии.</value>
+    <comment>{Locked="winget"}</comment>
+  </data>
+  <data name="InstallerDownloadAuthenticationFailed" xml:space="preserve">
+    <value>Не удалось скачать установщик. Проверка подлинности не пройдена.</value>
   </data>
 </root>

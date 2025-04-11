@@ -10,7 +10,7 @@ The first thing to check is which version of Windows 10 you have.
 
 The Windows Package Manager requires at least Version 1809 (October 2018 Update).
 
-The next requirement is ensuring you have the [App Installer](https://www.microsoft.com/p/app-installer/9nblggh4nns1) from the Microsoft Store. The Windows Package Manager is delivered as an MSIX package. The App Installer is required to install MSIX packages on Windows 10.
+The next requirement is ensuring you have the [App Installer](https://apps.microsoft.com/detail/9nblggh4nns1) from the Microsoft Store. The Windows Package Manager is delivered as an MSIX package. The App Installer is required to install MSIX packages on Windows 10.
 
 >Note: The Windows Package Manager is shipped with later versions of the App Installer.
 
@@ -153,3 +153,9 @@ A possible troubleshooting step is to install the [KB5005565](https://support.mi
 #### Updating Microsoft.DesktopAppInstaller from version 1.0.42251.0 doesn't render package name on Windows 11 Pro image in Azure
 
 Launching the Microsoft.DesktopAppInstaller update on Windows 11 Pro image in Azure to update from version 1.0.42251.0 might not render the correct package name title. The workaround to this issue is to install the latest Microsoft.DesktopAppInstaller with Windows Package Manager.
+
+#### Failed in attempting to update the source: winget
+
+The WinGet Community repository (a.k.a. "winget" source) requires network connectivity to https://cdn.winget.microsoft.com/cache. Depending on the version of WinGet, either the source.msix or source2.msix is downloaded and installed. This pre-indexed package contains the local copy of metadata queried by WinGet. 
+
+If running `winget source update` doesn't resolve the problem and you are on WinGet 1.10 or newer, you may be able to correct the problem by uninstalling the current source "Windows Package Manager Source (winget) V2" and running another winget command, or manually install the source from: https://cdn.winget.microsoft.com/cache/source2.msix (You may need to download this using "In Private" if you encounter a 404).

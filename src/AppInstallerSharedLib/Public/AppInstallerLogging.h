@@ -56,9 +56,10 @@ namespace AppInstaller::Logging
         Core = 0x20,
         Test = 0x40,
         Config = 0x80,
+        Workflow = 0x100,
         None = 0,
         All = 0xFFFFFFFF,
-        Defaults = All & ~SQL,
+        Defaults = All & ~(SQL | Workflow),
     };
 
     DEFINE_ENUM_FLAG_OPERATORS(Channel);
@@ -133,14 +134,17 @@ namespace AppInstaller::Logging
         // Removes all loggers.
         void RemoveAllLoggers();
 
-        // Enables the given channel.
+        // Enables the given channel(s), in addition to the currently enabled channels.
         void EnableChannel(Channel channel);
+
+        // The given channel mask will become the only enabled channels.
+        void SetEnabledChannels(Channel channel);
 
         // Disables the given channel.
         void DisableChannel(Channel channel);
 
         // Sets the enabled level.
-        // All levels higher than this level will be enabled.
+        // All levels above this level will be enabled.
         // For example; SetLevel(Verbose) will enable all logs.
         void SetLevel(Level level);
 

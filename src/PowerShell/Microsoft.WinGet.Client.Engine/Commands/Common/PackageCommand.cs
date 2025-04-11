@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="PackageCommand.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -52,7 +52,7 @@ namespace Microsoft.WinGet.Client.Engine.Commands.Common
         /// <param name="match">The match option.</param>
         /// <param name="callback">The method to call after retrieving the package and version to operate upon.</param>
         /// <returns>Result of the callback.</returns>
-        protected async Task<Tuple<TResult, CatalogPackage>?> GetPackageAndExecuteAsync<TResult>(
+        internal async Task<Tuple<TResult, CatalogPackage>?> GetPackageAndExecuteAsync<TResult>(
             CompositeSearchBehavior behavior,
             PackageFieldMatchOption match,
             Func<CatalogPackage, PackageVersionId?, Task<TResult>> callback)
@@ -78,7 +78,7 @@ namespace Microsoft.WinGet.Client.Engine.Commands.Common
         /// <param name="options">The options object.</param>
         /// <param name="match">The match type.</param>
         /// <param name="value">The query value.</param>
-        protected override void SetQueryInFindPackagesOptions(
+        internal override void SetQueryInFindPackagesOptions(
             ref FindPackagesOptions options,
             string match,
             string? value)
@@ -128,7 +128,9 @@ namespace Microsoft.WinGet.Client.Engine.Commands.Common
             {
                 for (var i = 0; i < package.AvailableVersions.Count; i++)
                 {
-                    if (package.AvailableVersions[i].Version.CompareTo(this.Version) == 0)
+                    PackageVersionInfo versionInfo = package.GetPackageVersionInfo(package.AvailableVersions[i]);
+
+                    if (versionInfo != null && versionInfo.CompareToVersion(this.Version) == CompareResult.Equal)
                     {
                         return package.AvailableVersions[i];
                     }

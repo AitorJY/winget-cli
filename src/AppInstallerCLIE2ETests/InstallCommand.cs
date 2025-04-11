@@ -365,7 +365,7 @@ namespace AppInstallerCLIE2ETests
             Directory.Delete(conflictDirectory, true);
 
             Assert.AreNotEqual(Constants.ErrorCode.S_OK, result.ExitCode);
-            Assert.True(result.StdOut.Contains("Unable to create symlink, path points to a directory."));
+            Assert.True(result.StdOut.Contains("Unable to create symlink"));
         }
 
         /// <summary>
@@ -517,6 +517,25 @@ namespace AppInstallerCLIE2ETests
         }
 
         /// <summary>
+        /// Test install zip portable with binaries that depend on PATH variable.
+        /// </summary>
+        [Test]
+        public void InstallZip_ArchivePortableWithBinariesDependentOnPath()
+        {
+            string installDir = TestCommon.GetPortablePackagesDirectory();
+            string packageId, commandAlias, fileName, packageDirName, productCode;
+            packageId = "AppInstallerTest.ArchivePortableWithBinariesDependentOnPath";
+            packageDirName = productCode = packageId + "_" + Constants.TestSourceIdentifier;
+            commandAlias = "TestPortable.exe";
+            fileName = "AppInstallerTestExeInstaller.exe";
+
+            var result = TestCommon.RunAICLICommand("install", $"{packageId}");
+            Assert.AreEqual(Constants.ErrorCode.S_OK, result.ExitCode);
+            Assert.True(result.StdOut.Contains("Successfully installed"));
+            TestCommon.VerifyPortablePackage(Path.Combine(installDir, packageDirName), commandAlias, fileName, productCode, true, TestCommon.Scope.User, true);
+        }
+
+        /// <summary>
         /// Test install zip with invalid relative file path.
         /// </summary>
         [Test]
@@ -550,6 +569,21 @@ namespace AppInstallerCLIE2ETests
             Assert.AreEqual(Constants.ErrorCode.S_OK, result.ExitCode);
             Assert.True(result.StdOut.Contains("Successfully installed"));
             Assert.True(TestCommon.VerifyTestMsixInstalledAndCleanup());
+        }
+
+        /// <summary>
+        /// Test install zip exe by extracting with tar.
+        /// </summary>
+        [Test]
+        public void InstallZip_ExtractWithTar()
+        {
+            WinGetSettingsHelper.ConfigureInstallBehavior(Constants.ArchiveExtractionMethod, "tar");
+            var installDir = TestCommon.GetRandomTestDir();
+            var result = TestCommon.RunAICLICommand("install", $"AppInstallerTest.TestZipInstallerWithExe --silent -l {installDir}");
+            WinGetSettingsHelper.ConfigureInstallBehavior(Constants.ArchiveExtractionMethod, string.Empty);
+            Assert.AreEqual(Constants.ErrorCode.S_OK, result.ExitCode);
+            Assert.True(result.StdOut.Contains("Successfully installed"));
+            Assert.True(TestCommon.VerifyTestExeInstalledAndCleanup(installDir, "/execustom"));
         }
 
         /// <summary>

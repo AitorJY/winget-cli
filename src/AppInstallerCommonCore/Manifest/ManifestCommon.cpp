@@ -80,7 +80,7 @@ namespace AppInstaller::Manifest
                 }
             }
 
-            for (const Version& ext : m_extensions)
+            for (const RawVersion& ext : m_extensions)
             {
                 if (ext.GetParts().empty() || ext.GetParts()[0].Integer != 0)
                 {
@@ -105,7 +105,7 @@ namespace AppInstaller::Manifest
 
     bool ManifestVer::HasExtension(std::string_view extension) const
     {
-        for (const Version& ext : m_extensions)
+        for (const RawVersion& ext : m_extensions)
         {
             const auto& parts = ext.GetParts();
             if (!parts.empty() && parts[0].Integer == 0 && parts[0].Other == extension)
@@ -222,20 +222,48 @@ namespace AppInstaller::Manifest
         return result;
     }
 
-    PlatformEnum ConvertToPlatformEnum(const std::string& in)
+    PlatformEnum ConvertToPlatformEnum(std::string_view in)
     {
-        PlatformEnum result = PlatformEnum::Unknown;
+        std::string inStrLower = Utility::ToLower(in);
 
-        if (Utility::CaseInsensitiveEquals(in, "windows.desktop"))
+        if (inStrLower == "windows.desktop")
         {
-            result = PlatformEnum::Desktop;
+            return PlatformEnum::Desktop;
         }
-        else if (Utility::CaseInsensitiveEquals(in, "windows.universal"))
+        else if (inStrLower == "windows.universal")
         {
-            result = PlatformEnum::Universal;
+            return PlatformEnum::Universal;
         }
 
-        return result;
+        return PlatformEnum::Unknown;
+    }
+
+    PlatformEnum ConvertToPlatformEnumForMSStoreDownload(std::string_view in)
+    {
+        std::string inStrLower = Utility::ToLower(in);
+
+        if (inStrLower == "windows.desktop")
+        {
+            return PlatformEnum::Desktop;
+        }
+        else if (inStrLower == "windows.universal")
+        {
+            return PlatformEnum::Universal;
+        }
+        else if (inStrLower == "windows.iot")
+        {
+            return PlatformEnum::IoT;
+        }
+        else if (inStrLower == "windows.team")
+        {
+            return PlatformEnum::Team;
+        }
+        else if (inStrLower == "windows.holographic")
+        {
+            return PlatformEnum::Holographic;
+        }
+
+        return PlatformEnum::Unknown;
     }
 
     ElevationRequirementEnum ConvertToElevationRequirementEnum(const std::string& in)
@@ -630,14 +658,20 @@ namespace AppInstaller::Manifest
         return "unknown"sv;
     }
 
-    std::string_view PlatformToString(PlatformEnum platform)
+    std::string_view PlatformToString(PlatformEnum platform, bool shortString)
     {
         switch (platform)
         {
         case PlatformEnum::Desktop:
-            return "Windows.Desktop"sv;
+            return shortString ? "Desktop" : "Windows.Desktop"sv;
         case PlatformEnum::Universal:
-            return "Windows.Universal"sv;
+            return shortString ? "Universal" : "Windows.Universal"sv;
+        case PlatformEnum::IoT:
+            return shortString ? "IoT" : "Windows.IoT"sv;
+        case PlatformEnum::Holographic:
+            return shortString ? "Holographic" : "Windows.Holographic"sv;
+        case PlatformEnum::Team:
+            return shortString ? "Team" : "Windows.Team"sv;
         }
 
         return "Unknown"sv;
@@ -1079,22 +1113,11 @@ namespace AppInstaller::Manifest
     {
         Dependency* existingDependency = this->HasDependency(newDependency);
 
-        if (existingDependency != NULL) {
-            if (newDependency.MinVersion)
+        if (existingDependency != NULL)
+        {
+            if (newDependency.MinVersion > existingDependency->MinVersion)
             {
-                if (existingDependency->MinVersion)
-                {
-                    const auto& newDependencyVersion = Utility::Version(newDependency.MinVersion.value());
-                    const auto& existingDependencyVersion = Utility::Version(existingDependency->MinVersion.value());
-                    if (newDependencyVersion > existingDependencyVersion)
-                    {
-                        existingDependency->MinVersion.value() = newDependencyVersion.ToString();
-                    }
-                }
-                else
-                {
-                    existingDependency->MinVersion.value() = newDependency.MinVersion.value();
-                }
+                existingDependency->MinVersion = newDependency.MinVersion;
             }
         }
         else
@@ -1134,7 +1157,7 @@ namespace AppInstaller::Manifest
     }
 
     // for testing purposes
-    bool DependencyList::HasExactDependency(DependencyType type, string_t id, string_t minVersion)
+    bool DependencyList::HasExactDependency(DependencyType type, const string_t& id, const string_t& minVersion)
     {
         for (const auto& dependency : m_dependencies)
         {
@@ -1142,7 +1165,7 @@ namespace AppInstaller::Manifest
             {
                 if (!minVersion.empty())
                 {
-                    return dependency.MinVersion.has_value() && dependency.MinVersion.value() == Utility::Version{ minVersion };
+                    return dependency.MinVersion == Utility::Version{ minVersion };
                 }
                 else
                 {

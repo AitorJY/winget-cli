@@ -77,6 +77,8 @@ namespace AppInstaller::CLI
             return { type, "scope"_liv, ArgTypeCategory::InstallerSelection | ArgTypeCategory::CopyValueToSubContext };
         case Execution::Args::Type::InstallArchitecture:
             return { type, "architecture"_liv, 'a', ArgTypeCategory::InstallerSelection | ArgTypeCategory::CopyValueToSubContext };
+        case Execution::Args::Type::InstallerArchitecture: // Used for input architecture that does not need applicability check. E.g. Download, Show.
+            return { type, "architecture"_liv, 'a', ArgTypeCategory::InstallerSelection | ArgTypeCategory::CopyValueToSubContext };
         case Execution::Args::Type::InstallerType:
             return { type, "installer-type"_liv, ArgTypeCategory::InstallerSelection };
         case Execution::Args::Type::HashOverride:
@@ -115,6 +117,10 @@ namespace AppInstaller::CLI
             return { type, "arg"_liv, 'a' };
         case Execution::Args::Type::ForceSourceReset:
             return { type, "force"_liv };
+        case Execution::Args::Type::SourceExplicit:
+            return { type, "explicit"_liv };
+        case Execution::Args::Type::SourceTrustLevel:
+            return { type, "trust-level"_liv };
 
         //Hash Command
         case Execution::Args::Type::HashFile:
@@ -137,8 +143,6 @@ namespace AppInstaller::CLI
             return { type, "position"_liv };
 
         // Export Command
-        case Execution::Args::Type::OutputFile:
-            return { type, "output"_liv, 'o' };
         case Execution::Args::Type::IncludeVersions:
             return { type, "include-versions"_liv };
 
@@ -196,21 +200,71 @@ namespace AppInstaller::CLI
         case Execution::Args::Type::IgnoreResumeLimit:
             return { type, "ignore-resume-limit"_liv, ArgTypeCategory::None };
 
+        // Font command
+        case Execution::Args::Type::Family:
+            return { type, "family"_liv, ArgTypeCategory::None };
+
         // Configuration commands
         case Execution::Args::Type::ConfigurationFile:
-            return { type, "file"_liv, 'f' };
+            return { type, "file"_liv, 'f', ArgTypeCategory::ConfigurationSetChoice, ArgTypeExclusiveSet::ConfigurationSetChoice };
         case Execution::Args::Type::ConfigurationAcceptWarning:
             return { type, "accept-configuration-agreements"_liv };
+        case Execution::Args::Type::ConfigurationSuppressPrologue:
+            return { type, "suppress-initial-details"_liv };
         case Execution::Args::Type::ConfigurationEnable:
             return { type, "enable"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::StubType };
         case Execution::Args::Type::ConfigurationDisable:
             return { type, "disable"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::StubType };
         case Execution::Args::Type::ConfigurationModulePath:
             return { type, "module-path"_liv };
+        case Execution::Args::Type::ConfigurationProcessorPath:
+            return { type, "processor-path"_liv };
+        case Execution::Args::Type::ConfigurationExportPackageId:
+            return { type, "package-id"_liv };
+        case Execution::Args::Type::ConfigurationExportModule:
+            return { type, "module"_liv };
+        case Execution::Args::Type::ConfigurationExportResource:
+            return { type, "resource"_liv };
+        case Execution::Args::Type::ConfigurationExportAll:
+            return { type, "all"_liv, 'r', "recurse"_liv };
+        case Execution::Args::Type::ConfigurationHistoryItem:
+            return { type, "history"_liv, 'h', ArgTypeCategory::ConfigurationSetChoice, ArgTypeExclusiveSet::ConfigurationSetChoice };
+        case Execution::Args::Type::ConfigurationHistoryRemove:
+            return { type, "remove"_liv };
+        case Execution::Args::Type::ConfigurationStatusWatch:
+            return { type, "live"_liv };
+
+        // DSCv3 resources
+        case Execution::Args::Type::DscResourceFunctionGet:
+            return { type, "get"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionSet:
+            return { type, "set"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionWhatIf:
+            return { type, "whatIf"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionTest:
+            return { type, "test"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionDelete:
+            return { type, "delete"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionExport:
+            return { type, "export"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionValidate:
+            return { type, "validate"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionResolve:
+            return { type, "resolve"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionAdapter:
+            return { type, "adapter"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionSchema:
+            return { type, "schema"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
+        case Execution::Args::Type::DscResourceFunctionManifest:
+            return { type, "manifest"_liv, ArgTypeCategory::None, ArgTypeExclusiveSet::DscResourceFunction };
 
         // Download command
         case Execution::Args::Type::DownloadDirectory:
             return { type, "download-directory"_liv, 'd', ArgTypeCategory::None };
+        case Execution::Args::Type::Platform:
+            return { type, "platform"_liv, ArgTypeCategory::None };
+        case Execution::Args::Type::SkipMicrosoftStorePackageLicense:
+            return { type, "skip-microsoft-store-package-license"_liv, "skip-license"_liv, ArgTypeCategory::None };
 
         // Common arguments
         case Execution::Args::Type::NoVT:
@@ -233,6 +287,8 @@ namespace AppInstaller::CLI
             return { type, "open-logs"_liv, "logs"_liv };
         case Execution::Args::Type::Force:
             return { type, "force"_liv, ArgTypeCategory::CopyFlagToSubContext };
+        case Execution::Args::Type::OutputFile:
+            return { type, "output"_liv, 'o' };
 
         case Execution::Args::Type::DependencySource:
             return { type, "dependency-source"_liv, ArgTypeCategory::ExtendedSource };
@@ -251,9 +307,9 @@ namespace AppInstaller::CLI
 
         // Authentication arguments
         case Execution::Args::Type::AuthenticationMode:
-            return { type, "authentication-mode"_liv };
+            return { type, "authentication-mode"_liv, ArgTypeCategory::CopyValueToSubContext };
         case Execution::Args::Type::AuthenticationAccount:
-            return { type, "authentication-account"_liv };
+            return { type, "authentication-account"_liv, ArgTypeCategory::CopyValueToSubContext };
 
         // Used for demonstration purposes
         case Execution::Args::Type::ExperimentalArg:
@@ -312,6 +368,8 @@ namespace AppInstaller::CLI
             return Argument{ type, Resource::String::LocaleArgumentDescription, ArgumentType::Standard };
         case Args::Type::InstallArchitecture:
             return Argument{ type, Resource::String::ArchitectureArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help };
+        case Args::Type::InstallerArchitecture:
+            return Argument{ type, Resource::String::ArchitectureArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help };
         case Args::Type::Log:
             return Argument{ type, Resource::String::LogArgumentDescription, ArgumentType::Standard };
         case Args::Type::CustomSwitches:
@@ -344,6 +402,10 @@ namespace AppInstaller::CLI
             return Argument{ type, Resource::String::SourceArgArgumentDescription, ArgumentType::Positional, true };
         case Args::Type::SourceType:
             return Argument{ type, Resource::String::SourceTypeArgumentDescription, ArgumentType::Positional };
+        case Args::Type::SourceExplicit:
+            return Argument{ type, Resource::String::SourceExplicitArgumentDescription, ArgumentType::Flag };
+        case Args::Type::SourceTrustLevel:
+            return Argument{ type, Resource::String::SourceTrustLevelArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help };
         case Args::Type::ValidateManifest:
             return Argument{ type, Resource::String::ValidateManifestArgumentDescription, ArgumentType::Positional, true };
         case Args::Type::IgnoreWarnings:
@@ -384,6 +446,10 @@ namespace AppInstaller::CLI
             return Argument{ type, Resource::String::ForceArgumentDescription, ArgumentType::Flag, false };
         case Args::Type::DownloadDirectory:
             return Argument{ type, Resource::String::DownloadDirectoryArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help, false };
+        case Args::Type::SkipMicrosoftStorePackageLicense:
+            return Argument{ type, Resource::String::SkipMicrosoftStorePackageLicenseArgumentDescription, ArgumentType::Flag, Argument::Visibility::Help, false };
+        case Args::Type::Platform:
+            return Argument{ type, Resource::String::PlatformArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help, false };
         case Args::Type::InstallerType:
             return Argument{ type, Resource::String::InstallerTypeArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help, false };
         case Args::Type::ResumeId:
@@ -393,13 +459,15 @@ namespace AppInstaller::CLI
         case Args::Type::IgnoreResumeLimit:
             return Argument{ type, Resource::String::IgnoreResumeLimitArgumentDescription, ArgumentType::Flag, ExperimentalFeature::Feature::Resume };
         case Args::Type::AllVersions:
-            return Argument{ type, Resource::String::UninstallAllVersionsArgumentDescription, ArgumentType::Flag, Argument::Visibility::Help, ExperimentalFeature::Feature::SideBySide };
+            return Argument{ type, Resource::String::UninstallAllVersionsArgumentDescription, ArgumentType::Flag, Argument::Visibility::Help };
         case Args::Type::TargetVersion:
             return Argument{ type, Resource::String::TargetVersionArgumentDescription, ArgumentType::Standard };
         case Args::Type::Proxy:
-            return Argument{ type, Resource::String::ProxyArgumentDescription, ArgumentType::Standard, ExperimentalFeature::Feature::Proxy, TogglePolicy::Policy::ProxyCommandLineOptions, BoolAdminSetting::ProxyCommandLineOptions };
+            return Argument{ type, Resource::String::ProxyArgumentDescription, ArgumentType::Standard, TogglePolicy::Policy::ProxyCommandLineOptions, BoolAdminSetting::ProxyCommandLineOptions };
         case Args::Type::NoProxy:
-            return Argument{ type, Resource::String::NoProxyArgumentDescription, ArgumentType::Flag, ExperimentalFeature::Feature::Proxy, TogglePolicy::Policy::ProxyCommandLineOptions, BoolAdminSetting::ProxyCommandLineOptions };
+            return Argument{ type, Resource::String::NoProxyArgumentDescription, ArgumentType::Flag, TogglePolicy::Policy::ProxyCommandLineOptions, BoolAdminSetting::ProxyCommandLineOptions };
+        case Args::Type::Family:
+            return Argument{ type, Resource::String::FontFamilyNameArgumentDescription, ArgumentType::Positional, false };
         default:
             THROW_HR(E_UNEXPECTED);
         }

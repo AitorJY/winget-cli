@@ -45,6 +45,21 @@ namespace AppInstaller::Repository
 
     DEFINE_ENUM_FLAG_OPERATORS(SourceTrustLevel);
 
+    // Converts a string_view to the corresponding SourceTrustLevel enum.
+    SourceTrustLevel ConvertToSourceTrustLevelEnum(std::string_view trustLevel);
+
+    // Converts a vector of trust level strings to the corresponding SourceTrustLevel enum flag.
+    SourceTrustLevel ConvertToSourceTrustLevelFlag(std::vector<std::string> values);
+
+    // Converts a SourceTrustLevel flag to a list of trust level strings.
+    std::vector<std::string_view> SourceTrustLevelFlagToList(SourceTrustLevel trustLevel);
+
+    // Converts a SourceTrustLevel enum to the corresponding string.
+    std::string_view SourceTrustLevelEnumToString(SourceTrustLevel trustLevel);
+
+    // Gets the full trust level string name for display.
+    std::string GetSourceTrustLevelForDisplay(SourceTrustLevel trustLevel);
+
     std::string_view ToString(SourceOrigin origin);
 
     // Fields that require user agreements.
@@ -135,7 +150,13 @@ namespace AppInstaller::Repository
         // This value is used as an alternative to the `Arg` value if it is failing to function properly.
         // The alternate location must point to identical data or inconsistencies may arise.
         std::string AlternateArg;
+
+        // Whether the source should be hidden by default unless explicitly declared.
+        bool Explicit = false;
     };
+
+    // Check if a source matches a well known source
+    std::optional<WellKnownSource> CheckForWellKnownSource(const SourceDetails& sourceDetails);
 
     // Individual source agreement entry. Label will be highlighted in the display as the key of the agreement entry.
     struct SourceAgreement
@@ -200,7 +221,7 @@ namespace AppInstaller::Repository
         Source(WellKnownSource source);
 
         // Constructor for a source to be added.
-        Source(std::string_view name, std::string_view arg, std::string_view type);
+        Source(std::string_view name, std::string_view arg, std::string_view type, SourceTrustLevel trustLevel, bool isExplicit);
 
         // Constructor for creating a composite source from a list of available sources.
         Source(const std::vector<Source>& availableSources);
@@ -317,6 +338,9 @@ namespace AppInstaller::Repository
         // Get a list of all available SourceDetails.
         static std::vector<SourceDetails> GetCurrentSources();
 
+        // Get a default source type is the source type used when adding a source without specifying a type.
+        static std::string_view GetDefaultSourceType();
+
     private:
         void InitializeSourceReference(std::string_view name);
 
@@ -326,6 +350,6 @@ namespace AppInstaller::Repository
         bool m_isComposite = false;
         std::optional<TimeSpan> m_backgroundUpdateInterval;
         bool m_installedPackageInformationOnly = false;
-        mutable PackageTrackingCatalog m_trackingCatalog;
+        mutable std::shared_ptr<PackageTrackingCatalog> m_trackingCatalog;
     };
 }

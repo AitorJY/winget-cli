@@ -14,6 +14,7 @@ namespace AppInstaller::CLI
         return {
             Argument{ Execution::Args::Type::ConfigurationFile, Resource::String::ConfigurationFileArgumentDescription, ArgumentType::Positional, true },
             Argument{ Execution::Args::Type::ConfigurationModulePath, Resource::String::ConfigurationModulePath, ArgumentType::Positional },
+            Argument{ Execution::Args::Type::ConfigurationProcessorPath, Resource::String::ConfigurationProcessorPath, ArgumentType::Standard, Argument::Visibility::Help },
         };
     }
 
@@ -29,7 +30,6 @@ namespace AppInstaller::CLI
 
     Utility::LocIndView ConfigureValidateCommand::HelpLink() const
     {
-        // TODO: Make this exist
         return "https://aka.ms/winget-command-configure#validate"_liv;
     }
 
@@ -38,8 +38,9 @@ namespace AppInstaller::CLI
         context <<
             VerifyIsFullPackage <<
             VerifyFileOrUri(Execution::Args::Type::ConfigurationFile) <<
-            CreateConfigurationProcessor <<
+            CreateConfigurationProcessorWithoutFactory <<
             OpenConfigurationSet <<
+            CreateConfigurationProcessor <<
             ValidateConfigurationSetSemantics <<
             ValidateConfigurationSetUnitProcessors <<
             ValidateConfigurationSetUnitContents <<

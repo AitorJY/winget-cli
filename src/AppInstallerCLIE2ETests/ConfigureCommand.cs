@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="ConfigureCommand.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -6,8 +6,11 @@
 
 namespace AppInstallerCLIE2ETests
 {
+    using System;
     using System.IO;
+    using System.Linq;
     using AppInstallerCLIE2ETests.Helpers;
+    using Microsoft.Win32;
     using NUnit.Framework;
 
     /// <summary>
@@ -18,12 +21,29 @@ namespace AppInstallerCLIE2ETests
         private const string CommandAndAgreementsAndVerbose = "configure --accept-configuration-agreements --verbose";
 
         /// <summary>
+        /// Ensures that the test resources manifests are present.
+        /// </summary>
+        public static void EnsureTestResourcePresence()
+        {
+            string outputDirectory = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\WindowsApps");
+            Assert.IsNotEmpty(outputDirectory);
+
+            var result = TestCommon.RunAICLICommand("dscv3 test-file", $"--manifest -o {outputDirectory}\\test-file.dsc.resource.json");
+            Assert.AreEqual(0, result.ExitCode);
+
+            result = TestCommon.RunAICLICommand("dscv3 test-json", $"--manifest -o {outputDirectory}\\test-json.dsc.resource.json");
+            Assert.AreEqual(0, result.ExitCode);
+        }
+
+        /// <summary>
         /// Setup done once before all the tests here.
         /// </summary>
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            this.DeleteTxtFiles();
+            WinGetSettingsHelper.ConfigureFeature("dsc3", true);
+            this.DeleteResourceArtifacts();
+            EnsureTestResourcePresence();
         }
 
         /// <summary>
@@ -32,7 +52,8 @@ namespace AppInstallerCLIE2ETests
         [OneTimeTearDown]
         public void OneTimeTeardown()
         {
-            this.DeleteTxtFiles();
+            WinGetSettingsHelper.ConfigureFeature("dsc3", false);
+            this.DeleteResourceArtifacts();
         }
 
         /// <summary>
@@ -40,6 +61,7 @@ namespace AppInstallerCLIE2ETests
         /// Intentionally has no settings to force a failure, but only after acquiring the module.
         /// </summary>
         [Test]
+        [Ignore("PS Gallery tests are unreliable.")]
         public void ConfigureFromGallery()
         {
             TestCommon.EnsureModuleState(Constants.GalleryTestModuleName, present: false);
@@ -63,12 +85,37 @@ namespace AppInstallerCLIE2ETests
             // The configuration creates a file next to itself with the given contents
             string targetFilePath = TestCommon.GetTestDataFile("Configuration\\Configure_TestRepo.txt");
             FileAssert.Exists(targetFilePath);
-            Assert.AreEqual("Contents!", System.IO.File.ReadAllText(targetFilePath));
+            Assert.AreEqual("Contents!", File.ReadAllText(targetFilePath));
 
             Assert.True(Directory.Exists(
                 Path.Combine(
                     TestCommon.GetExpectedModulePath(TestCommon.TestModuleLocation.Default),
                     Constants.SimpleTestModuleName)));
+        }
+
+        /// <summary>
+        /// Simple test to confirm that the module was installed to the location specified in the DefaultModuleRoot settings.
+        /// </summary>
+        [Test]
+        public void ConfigureFromTestRepo_DefaultModuleRootSetting()
+        {
+            TestCommon.EnsureModuleState(Constants.SimpleTestModuleName, present: false);
+            string moduleTestDir = TestCommon.GetRandomTestDir();
+            WinGetSettingsHelper.ConfigureConfigureBehavior(Constants.DefaultModuleRoot, moduleTestDir);
+
+            string args = TestCommon.GetTestDataFile("Configuration\\Configure_TestRepo_Location.yml");
+            var result = TestCommon.RunAICLICommand(CommandAndAgreementsAndVerbose, args);
+
+            WinGetSettingsHelper.ConfigureConfigureBehavior(Constants.DefaultModuleRoot, string.Empty);
+            bool moduleExists = Directory.Exists(Path.Combine(moduleTestDir, Constants.SimpleTestModuleName));
+            if (moduleExists)
+            {
+                // Clean test directory to avoid impacting other tests.
+                Directory.Delete(moduleTestDir, true);
+            }
+
+            Assert.AreEqual(0, result.ExitCode);
+            Assert.True(moduleExists);
         }
 
         /// <summary>
@@ -122,7 +169,7 @@ namespace AppInstallerCLIE2ETests
             // The configuration creates a file next to itself with the given contents
             string targetFilePath = TestCommon.GetTestDataFile("Configuration\\IndependentResources_OneFailure.txt");
             FileAssert.Exists(targetFilePath);
-            Assert.AreEqual("Contents!", System.IO.File.ReadAllText(targetFilePath));
+            Assert.AreEqual("Contents!", File.ReadAllText(targetFilePath));
         }
 
         /// <summary>
@@ -154,7 +201,7 @@ namespace AppInstallerCLIE2ETests
         }
 
         /// <summary>
-        /// Resource name case insensitive test.
+        /// Resource name case-insensitive test.
         /// </summary>
         [Test]
         public void ResourceCaseInsensitive()
@@ -167,7 +214,7 @@ namespace AppInstallerCLIE2ETests
             // The configuration creates a file next to itself with the given contents
             string targetFilePath = TestCommon.GetTestDataFile("Configuration\\ResourceCaseInsensitive.txt");
             FileAssert.Exists(targetFilePath);
-            Assert.AreEqual("Contents!", System.IO.File.ReadAllText(targetFilePath));
+            Assert.AreEqual("Contents!", File.ReadAllText(targetFilePath));
         }
 
         /// <summary>
@@ -182,7 +229,126 @@ namespace AppInstallerCLIE2ETests
             Assert.AreEqual(0, result.ExitCode);
         }
 
-        private void DeleteTxtFiles()
+        /// <summary>
+        /// Runs a configuration, then changes the state and runs it again from history.
+        /// </summary>
+        [Test]
+        public void ConfigureFromHistory()
+        {
+            var result = TestCommon.RunAICLICommand(CommandAndAgreementsAndVerbose, TestCommon.GetTestDataFile("Configuration\\Configure_TestRepo.yml"));
+            Assert.AreEqual(0, result.ExitCode);
+
+            // The configuration creates a file next to itself with the given contents
+            string targetFilePath = TestCommon.GetTestDataFile("Configuration\\Configure_TestRepo.txt");
+            FileAssert.Exists(targetFilePath);
+            Assert.AreEqual("Contents!", File.ReadAllText(targetFilePath));
+
+            File.WriteAllText(targetFilePath, "Changed contents!");
+
+            string guid = TestCommon.GetConfigurationInstanceIdentifierFor("Configure_TestRepo.yml");
+            result = TestCommon.RunAICLICommand(CommandAndAgreementsAndVerbose, $"-h {guid}");
+            Assert.AreEqual(0, result.ExitCode);
+
+            FileAssert.Exists(targetFilePath);
+            Assert.AreEqual("Contents!", File.ReadAllText(targetFilePath));
+        }
+
+        /// <summary>
+        /// Specifies the module path to an "elevated" server.
+        /// </summary>
+        [Test]
+        public void SpecifyModulePathToHighIntegrityServer()
+        {
+            string configFile = TestCommon.GetTestDataFile("Configuration\\GetPSModulePath.yml");
+            string testDirectory = TestCommon.GetRandomTestDir();
+
+            var result = TestCommon.RunAICLICommand(CommandAndAgreementsAndVerbose, $"{configFile} --module-path \"{testDirectory}\"");
+            Assert.AreEqual(0, result.ExitCode);
+
+            string testFile = Path.Join(TestCommon.GetTestDataFile("Configuration"), "PSModulePath.txt");
+            Assert.True(File.Exists(testFile));
+            string testFileContents = File.ReadAllText(testFile);
+            Assert.True(testFileContents.StartsWith(testDirectory));
+        }
+
+        /// <summary>
+        /// Runs a DSCv3 configuration, then changes the state and runs it again from history.
+        /// </summary>
+        [Test]
+        public void ConfigureThroughHistory_DSCv3()
+        {
+            var result = TestCommon.RunAICLICommand(CommandAndAgreementsAndVerbose, TestCommon.GetTestDataFile("Configuration\\ShowDetails_DSCv3.yml"));
+            Assert.AreEqual(0, result.ExitCode);
+
+            // The configuration creates a file next to itself with the given contents
+            string targetFilePath = TestCommon.GetTestDataFile("Configuration\\ShowDetails_DSCv3.txt");
+            FileAssert.Exists(targetFilePath);
+            Assert.AreEqual("DSCv3 Contents!", File.ReadAllText(targetFilePath));
+
+            File.WriteAllText(targetFilePath, "Changed contents!");
+
+            string guid = TestCommon.GetConfigurationInstanceIdentifierFor("ShowDetails_DSCv3.yml");
+            result = TestCommon.RunAICLICommand(CommandAndAgreementsAndVerbose, $"-h {guid}");
+            Assert.AreEqual(0, result.ExitCode);
+
+            FileAssert.Exists(targetFilePath);
+            Assert.AreEqual("DSCv3 Contents!", File.ReadAllText(targetFilePath));
+        }
+
+        /// <summary>
+        /// Ensures that the test file resource schema function works.
+        /// </summary>
+        [Test]
+        public void TestFileResourceSchema()
+        {
+            var result = TestCommon.RunAICLICommand("dscv3 test-file", "--schema");
+            Assert.AreEqual(0, result.ExitCode);
+
+            var lines = result.StdOut.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+            Assert.AreEqual(1, lines.Length);
+        }
+
+        /// <summary>
+        /// Export all with specific package id.
+        /// </summary>
+        [Test]
+        public void DSCv3_Export()
+        {
+            // Reset state
+            var result = TestCommon.RunAICLICommand("dscv3 test-json", "--delete");
+            Assert.AreEqual(0, result.ExitCode);
+
+            // Configure properties
+            string propertyName1 = "prop1";
+            string propertyName2 = "prop2";
+            string propertyValue1 = "val1";
+            string propertyValue2 = "val2";
+
+            string propertySetFormatString = "{{ \"property\": \"{0}\", \"value\": \"{1}\" }}";
+
+            result = TestCommon.RunAICLICommand("dscv3 test-json", "--set", string.Format(propertySetFormatString, propertyName1, propertyValue1));
+            Assert.AreEqual(0, result.ExitCode);
+
+            result = TestCommon.RunAICLICommand("dscv3 test-json", "--set", string.Format(propertySetFormatString, propertyName2, propertyValue2));
+            Assert.AreEqual(0, result.ExitCode);
+
+            // Export
+            var exportDir = TestCommon.GetRandomTestDir();
+            var exportFile = Path.Combine(exportDir, "exported.yml");
+
+            result = TestCommon.RunAICLICommand("test config-export-units", $"-o {exportFile} --resource Microsoft.WinGet/TestJSON --verbose");
+            Assert.AreEqual(0, result.ExitCode);
+
+            Assert.True(File.Exists(exportFile));
+            string exportText = File.ReadAllText(exportFile);
+            Assert.True(exportText.Contains("Microsoft.WinGet/TestJSON"));
+            Assert.True(exportText.Contains(propertyName1));
+            Assert.True(exportText.Contains(propertyName2));
+            Assert.True(exportText.Contains(propertyValue1));
+            Assert.True(exportText.Contains(propertyValue2));
+        }
+
+        private void DeleteResourceArtifacts()
         {
             // Delete all .txt files in the test directory; they are placed there by the tests
             foreach (string file in Directory.GetFiles(TestCommon.GetTestDataFile("Configuration"), "*.txt"))

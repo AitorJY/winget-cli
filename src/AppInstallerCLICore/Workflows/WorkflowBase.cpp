@@ -5,13 +5,18 @@
 #include "ExecutionContext.h"
 #include "ManifestComparator.h"
 #include "PromptFlow.h"
+#include "Sixel.h"
 #include "TableOutput.h"
+#include <winget/FileCache.h>
 #include <winget/ExperimentalFeature.h>
 #include <winget/ManifestYamlParser.h>
 #include <winget/Pin.h>
 #include <winget/PinningData.h>
+#include <AppInstallerSHA256.h>
 #include <winget/Runtime.h>
 #include <winget/PackageVersionSelection.h>
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 using namespace std::string_literals;
 using namespace AppInstaller::Utility::literals;
@@ -63,6 +68,77 @@ namespace AppInstaller::CLI::Workflow
 
             out << std::endl;
         }
+
+        // Determines icon fit given two options.
+        // Targets an 80x80 icon as the best resolution for this use case.
+        // TODO: Consider theme based on current background color.
+        bool IsSecondIconBetter(const Manifest::Icon& current, const Manifest::Icon& alternative)
+        {
+            static constexpr std::array<uint8_t, ToIntegral(Manifest::IconResolutionEnum::Square256) + 1> s_iconResolutionOrder
+            {
+                9, // Unknown
+                8, // Custom
+                15, // Square16
+                14, // Square20
+                13, // Square24
+                12, // Square30
+                11, // Square32
+                10, // Square36
+                6, // Square40
+                5, // Square48
+                4, // Square60
+                3, // Square64
+                2, // Square72
+                0, // Square80
+                1, // Square96
+                7, // Square256
+            };
+
+            return s_iconResolutionOrder.at(ToIntegral(alternative.Resolution)) < s_iconResolutionOrder.at(ToIntegral(current.Resolution));
+        }
+
+        void ShowManifestIcon(Execution::Context& context, const Manifest::Manifest& manifest) try
+        {
+            if (!context.Reporter.SixelsEnabled())
+            {
+                return;
+            }
+
+            auto icons = manifest.CurrentLocalization.Get<Manifest::Localization::Icons>();
+            const Manifest::Icon* bestFitIcon = nullptr;
+
+            for (const auto& icon : icons)
+            {
+                if (!bestFitIcon || IsSecondIconBetter(*bestFitIcon, icon))
+                {
+                    bestFitIcon = &icon;
+                }
+            }
+
+            if (!bestFitIcon)
+            {
+                return;
+            }
+
+            // Use a cache to hold the icons
+            auto splitUri = Utility::SplitFileNameFromURI(bestFitIcon->Url);
+            Caching::FileCache fileCache{ Caching::FileCache::Type::Icon, Utility::SHA256::ConvertToString(bestFitIcon->Sha256), { splitUri.first } };
+            auto iconStream = fileCache.GetFile(splitUri.second, bestFitIcon->Sha256);
+
+            VirtualTerminal::Sixel::Image sixelIcon{ *iconStream, bestFitIcon->FileType };
+
+            // Using a height of 4 arbitrarily; allow width up to the entire console.
+            UINT imageHeightCells = 4;
+            UINT imageWidthCells = static_cast<UINT>(Execution::GetConsoleWidth());
+
+            sixelIcon.RenderSizeInCells(imageWidthCells, imageHeightCells);
+            auto infoOut = context.Reporter.Info();
+            sixelIcon.RenderTo(infoOut);
+
+            // Force the final sixel line to not be overwritten
+            infoOut << std::endl;
+        }
+        CATCH_LOG();
 
         Repository::Source OpenNamedSource(Execution::Context& context, Utility::LocIndView sourceName)
         {
@@ -259,6 +335,19 @@ namespace AppInstaller::CLI::Workflow
         m_func(context);
     }
 
+    void WorkflowTask::Log() const
+    {
+        if (m_isFunc)
+        {
+            // Using `00000001`80000000` as base address default when loading dll into windbg as dump file.
+            AICLI_LOG(Workflow, Verbose, << "Running task: 0x" << m_func << " [ln 00000001`80000000+" << std::hex << (reinterpret_cast<char*>(m_func) - reinterpret_cast<char*>(&__ImageBase)) << "]");
+        }
+        else
+        {
+            AICLI_LOG(Workflow, Verbose, << "Running task: " << m_name);
+        }
+    }
+
     Repository::PredefinedSource DetermineInstalledSource(const Execution::Context& context)
     {
         Repository::PredefinedSource installedSource = Repository::PredefinedSource::Installed;
@@ -299,7 +388,7 @@ namespace AppInstaller::CLI::Workflow
         return authArgs;
     }
 
-    HRESULT HandleException(Execution::Context& context, std::exception_ptr exception)
+    HRESULT HandleException(Execution::Context* context, std::exception_ptr exception)
     {
         try
         {
@@ -310,45 +399,65 @@ namespace AppInstaller::CLI::Workflow
         {
             // Even though they are logged at their source, log again here for completeness.
             Logging::Telemetry().LogException(Logging::FailureTypeEnum::ResultException, re.what());
-            context.Reporter.Error() <<
-                Resource::String::UnexpectedErrorExecutingCommand << ' ' << std::endl <<
-                GetUserPresentableMessage(re) << std::endl;
+            if (context)
+            {
+                context->Reporter.Error() <<
+                    Resource::String::UnexpectedErrorExecutingCommand << ' ' << std::endl <<
+                    GetUserPresentableMessage(re) << std::endl;
+            }
             return re.GetErrorCode();
         }
         catch (const winrt::hresult_error& hre)
         {
             std::string message = GetUserPresentableMessage(hre);
             Logging::Telemetry().LogException(Logging::FailureTypeEnum::WinrtHResultError, message);
-            context.Reporter.Error() <<
-                Resource::String::UnexpectedErrorExecutingCommand << ' ' << std::endl <<
-                message << std::endl;
+            if (context)
+            {
+                context->Reporter.Error() <<
+                    Resource::String::UnexpectedErrorExecutingCommand << ' ' << std::endl <<
+                    message << std::endl;
+            }
             return hre.code();
         }
         catch (const Settings::GroupPolicyException& e)
         {
-            auto policy = Settings::TogglePolicy::GetPolicy(e.Policy());
-            auto policyNameId = policy.PolicyName();
-            context.Reporter.Error() << Resource::String::DisabledByGroupPolicy(policyNameId) << std::endl;
+            if (context)
+            {
+                auto policy = Settings::TogglePolicy::GetPolicy(e.Policy());
+                auto policyNameId = policy.PolicyName();
+                context->Reporter.Error() << Resource::String::DisabledByGroupPolicy(policyNameId) << std::endl;
+            }
             return APPINSTALLER_CLI_ERROR_BLOCKED_BY_POLICY;
         }
         catch (const std::exception& e)
         {
             Logging::Telemetry().LogException(Logging::FailureTypeEnum::StdException, e.what());
-            context.Reporter.Error() <<
-                Resource::String::UnexpectedErrorExecutingCommand << ' ' << std::endl <<
-                GetUserPresentableMessage(e) << std::endl;
+            if (context)
+            {
+                context->Reporter.Error() <<
+                    Resource::String::UnexpectedErrorExecutingCommand << ' ' << std::endl <<
+                    GetUserPresentableMessage(e) << std::endl;
+            }
             return APPINSTALLER_CLI_ERROR_COMMAND_FAILED;
         }
         catch (...)
         {
             LOG_CAUGHT_EXCEPTION();
             Logging::Telemetry().LogException(Logging::FailureTypeEnum::Unknown, {});
-            context.Reporter.Error() <<
-                Resource::String::UnexpectedErrorExecutingCommand << " ???"_liv << std::endl;
+            if (context)
+            {
+                context->Reporter.Error() <<
+                    Resource::String::UnexpectedErrorExecutingCommand << " ???"_liv << std::endl;
+            }
             return APPINSTALLER_CLI_ERROR_COMMAND_FAILED;
         }
 
         return E_UNEXPECTED;
+    }
+
+    HRESULT HandleException(Execution::Context& context, std::exception_ptr exception)
+    {
+        return HandleException(&context, exception);
     }
 
     void OpenSource::operator()(Execution::Context& context) const
@@ -996,7 +1105,7 @@ namespace AppInstaller::CLI::Workflow
             {
                 Logging::Telemetry().LogMultiAppMatch();
 
-                if (m_operationType == OperationType::Upgrade || m_operationType == OperationType::Uninstall || m_operationType == OperationType::Repair)
+                if (m_operationType == OperationType::Upgrade || m_operationType == OperationType::Uninstall || m_operationType == OperationType::Repair || m_operationType == OperationType::Export)
                 {
                     context.Reporter.Warn() << Resource::String::MultipleInstalledPackagesFound << std::endl;
                     context << ReportMultiplePackageFoundResult;
@@ -1157,6 +1266,12 @@ namespace AppInstaller::CLI::Workflow
 
     void VerifyFileOrUri::operator()(Execution::Context& context) const
     {
+        // Argument requirement is handled elsewhere.
+        if (!context.Args.Contains(m_arg))
+        {
+            return;
+        }
+
         auto path = context.Args.GetArg(m_arg);
 
         // try uri first
@@ -1237,12 +1352,14 @@ namespace AppInstaller::CLI::Workflow
     {
         const auto& manifest = context.Get<Execution::Data::Manifest>();
         ReportIdentity(context, {}, Resource::String::ReportIdentityFound, manifest.CurrentLocalization.Get<Manifest::Localization::PackageName>(), manifest.Id);
+        ShowManifestIcon(context, manifest);
     }
 
     void ReportManifestIdentityWithVersion::operator()(Execution::Context& context) const
     {
         const auto& manifest = context.Get<Execution::Data::Manifest>();
         ReportIdentity(context, m_prefix, m_label, manifest.CurrentLocalization.Get<Manifest::Localization::PackageName>(), manifest.Id, manifest.Version, m_level);
+        ShowManifestIcon(context, manifest);
     }
 
     void SelectInstaller(Execution::Context& context)
@@ -1370,35 +1487,32 @@ namespace AppInstaller::CLI::Workflow
     {
         std::shared_ptr<IPackage> installed = context.Get<Execution::Data::Package>()->GetInstalled();
 
-        if (ExperimentalFeature::IsEnabled(ExperimentalFeature::Feature::SideBySide))
+        if (installed)
         {
-            if (installed)
+            // TODO: This may need to be expanded dramatically to enable targeting across a variety of dimensions (architecture, etc.)
+            //       Alternatively, if we make it easier to see the fully unique package identifiers, we may avoid that need.
+            if (context.Args.Contains(Execution::Args::Type::TargetVersion))
             {
-                // TODO: This may need to be expanded dramatically to enable targeting across a variety of dimensions (architecture, etc.)
-                //       Alternatively, if we make it easier to see the fully unique package identifiers, we may avoid that need.
-                if (context.Args.Contains(Execution::Args::Type::TargetVersion))
-                {
-                    Repository::PackageVersionKey versionKey{ "", context.Args.GetArg(Execution::Args::Type::TargetVersion) , "" };
-                    std::shared_ptr<IPackageVersion> installedVersion = installed->GetVersion(versionKey);
+                Repository::PackageVersionKey versionKey{ "", context.Args.GetArg(Execution::Args::Type::TargetVersion) , "" };
+                std::shared_ptr<IPackageVersion> installedVersion = installed->GetVersion(versionKey);
 
-                    if (!installedVersion)
-                    {
-                        context.Reporter.Error() << Resource::String::GetManifestResultVersionNotFound(Utility::LocIndView{ versionKey.Version }) << std::endl;
-                        // This error maintains consistency with passing an available version to commands
-                        AICLI_TERMINATE_CONTEXT(APPINSTALLER_CLI_ERROR_NO_MANIFEST_FOUND);
-                    }
-
-                    context.Add<Execution::Data::InstalledPackageVersion>(std::move(installedVersion));
-                }
-                else
+                if (!installedVersion)
                 {
-                    context.Add<Execution::Data::InstalledPackageVersion>(installed->GetLatestVersion());
+                    context.Reporter.Error() << Resource::String::GetManifestResultVersionNotFound(Utility::LocIndView{ versionKey.Version }) << std::endl;
+                    // This error maintains consistency with passing an available version to commands
+                    AICLI_TERMINATE_CONTEXT(APPINSTALLER_CLI_ERROR_NO_MANIFEST_FOUND);
                 }
+
+                context.Add<Execution::Data::InstalledPackageVersion>(std::move(installedVersion));
+            }
+            else
+            {
+                context.Add<Execution::Data::InstalledPackageVersion>(installed->GetLatestVersion());
             }
         }
         else
         {
-            context.Add<Execution::Data::InstalledPackageVersion>(GetInstalledVersion(context.Get<Execution::Data::Package>()));
+            context.Add<Execution::Data::InstalledPackageVersion>(nullptr);
         }
     }
 
@@ -1433,6 +1547,7 @@ AppInstaller::CLI::Execution::Context& operator<<(AppInstaller::CLI::Execution::
         if (context.ShouldExecuteWorkflowTask(task))
 #endif
         {
+            task.Log();
             task(context);
         }
     }

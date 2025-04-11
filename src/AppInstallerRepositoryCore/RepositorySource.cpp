@@ -21,6 +21,7 @@
 
 using namespace AppInstaller::Settings;
 using namespace std::chrono_literals;
+using namespace AppInstaller::Utility::literals;
 
 namespace AppInstaller::Repository
 {
@@ -320,6 +321,93 @@ namespace AppInstaller::Repository
         THROW_HR(APPINSTALLER_CLI_ERROR_INVALID_SOURCE_TYPE);
     }
 
+    SourceTrustLevel ConvertToSourceTrustLevelEnum(std::string_view trustLevel)
+    {
+        std::string lowerTrustLevel = Utility::ToLower(trustLevel);
+
+        if (lowerTrustLevel == "storeorigin")
+        {
+            return SourceTrustLevel::StoreOrigin;
+        }
+        else if (lowerTrustLevel == "trusted")
+        {
+            return SourceTrustLevel::Trusted;
+        }
+        else if (lowerTrustLevel == "none")
+        {
+            return SourceTrustLevel::None;
+        }
+        else
+        {
+            THROW_HR(HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED));
+        }
+    }
+
+    std::string_view SourceTrustLevelEnumToString(SourceTrustLevel trustLevel)
+    {
+        switch (trustLevel)
+        {
+        case SourceTrustLevel::StoreOrigin:
+            return "StoreOrigin"sv;
+        case SourceTrustLevel::Trusted:
+            return "Trusted"sv;
+        case SourceTrustLevel::None:
+            return "None"sv;
+        }
+
+        return "Unknown"sv;
+    }
+
+    SourceTrustLevel ConvertToSourceTrustLevelFlag(std::vector<std::string> trustLevels)
+    {
+        Repository::SourceTrustLevel result = Repository::SourceTrustLevel::None;
+        for (auto& trustLevel : trustLevels)
+        {
+            Repository::SourceTrustLevel trustLevelEnum = ConvertToSourceTrustLevelEnum(trustLevel);
+            if (trustLevelEnum == Repository::SourceTrustLevel::None)
+            {
+                return Repository::SourceTrustLevel::None;
+            }
+            else if (trustLevelEnum == Repository::SourceTrustLevel::Trusted)
+            {
+                WI_SetFlag(result, Repository::SourceTrustLevel::Trusted);
+            }
+            else if (trustLevelEnum == Repository::SourceTrustLevel::StoreOrigin)
+            {
+                WI_SetFlag(result, Repository::SourceTrustLevel::StoreOrigin);
+            }
+            else
+            {
+                THROW_HR_MSG(HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED), "Invalid source trust level.");
+            }
+        }
+
+        return result;
+    }
+
+    std::vector<std::string_view> SourceTrustLevelFlagToList(SourceTrustLevel trustLevel)
+    {
+        std::vector<std::string_view> result;
+
+        if (WI_IsFlagSet(trustLevel, Repository::SourceTrustLevel::Trusted))
+        {
+            result.emplace_back(Repository::SourceTrustLevelEnumToString(Repository::SourceTrustLevel::Trusted));
+        }
+        if (WI_IsFlagSet(trustLevel, Repository::SourceTrustLevel::StoreOrigin))
+        {
+            result.emplace_back(Repository::SourceTrustLevelEnumToString(Repository::SourceTrustLevel::StoreOrigin));
+        }
+
+        return result;
+    }
+
+    std::string GetSourceTrustLevelForDisplay(SourceTrustLevel trustLevel)
+    {
+        std::vector<std::string_view> trustLevelList = Repository::SourceTrustLevelFlagToList(trustLevel);
+        std::vector<Utility::LocIndString> locIndList(trustLevelList.begin(), trustLevelList.end());
+        return Utility::Join("|"_liv, locIndList);
+    }
+
     std::string_view ToString(SourceOrigin origin)
     {
         switch (origin)
@@ -337,6 +425,11 @@ namespace AppInstaller::Repository
         default:
             THROW_HR(E_UNEXPECTED);
         }
+    }
+
+    std::optional<WellKnownSource> CheckForWellKnownSource(const SourceDetails& sourceDetails)
+    {
+        return CheckForWellKnownSourceMatch(sourceDetails.Name, sourceDetails.Arg, sourceDetails.Type);
     }
 
     Source::Source() {}
@@ -369,7 +462,7 @@ namespace AppInstaller::Repository
         m_sourceReferences.emplace_back(CreateSourceFromDetails(details));
     }
 
-    Source::Source(std::string_view name, std::string_view arg, std::string_view type)
+    Source::Source(std::string_view name, std::string_view arg, std::string_view type, SourceTrustLevel trustLevel, bool isExplicit)
     {
         m_isSourceToBeAdded = true;
         SourceDetails details;
@@ -385,6 +478,8 @@ namespace AppInstaller::Repository
             details.Name = name;
             details.Arg = arg;
             details.Type = type;
+            details.TrustLevel = trustLevel;
+            details.Explicit = isExplicit;
         }
 
         m_sourceReferences.emplace_back(CreateSourceFromDetails(details));
@@ -442,8 +537,15 @@ namespace AppInstaller::Repository
             }
             else if (currentSources.size() == 1)
             {
-                AICLI_LOG(Repo, Info, << "Default source requested, only 1 source available, using the only source: " << currentSources[0].get().Name);
-                InitializeSourceReference(currentSources[0].get().Name);
+                if (!currentSources[0].get().Explicit)
+                {
+                    AICLI_LOG(Repo, Info, << "Default source requested, only 1 source available, using the only source: " << currentSources[0].get().Name);
+                    InitializeSourceReference(currentSources[0].get().Name);
+                }
+                else
+                {
+                    AICLI_LOG(Repo, Info, << "Skipping explicit source reference " << currentSources[0].get().Name);
+                }
             }
             else
             {
@@ -451,8 +553,15 @@ namespace AppInstaller::Repository
 
                 for (auto& source : currentSources)
                 {
-                    AICLI_LOG(Repo, Info, << "Adding to source references " << source.get().Name);
-                    m_sourceReferences.emplace_back(CreateSourceFromDetails(source));
+                    if (!source.get().Explicit)
+                    {
+                        AICLI_LOG(Repo, Info, << "Adding to source references " << source.get().Name);
+                        m_sourceReferences.emplace_back(CreateSourceFromDetails(source));
+                    }
+                    else
+                    {
+                        AICLI_LOG(Repo, Info, << "Skipping explicit source reference " << source.get().Name);
+                    }
                 }
 
                 m_isComposite = true;
@@ -776,7 +885,7 @@ namespace AppInstaller::Repository
         // AddSourceForDetails will also check for empty, but we need the actual type before that for validation.
         if (sourceDetails.Type.empty())
         {
-            sourceDetails.Type = ISourceFactory::GetForType("")->TypeName();
+            sourceDetails.Type = GetDefaultSourceType();
         }
 
         AICLI_LOG(Repo, Info, << "Adding source: Name[" << sourceDetails.Name << "], Type[" << sourceDetails.Type << "], Arg[" << sourceDetails.Arg << "]");
@@ -879,12 +988,19 @@ namespace AppInstaller::Repository
 
     PackageTrackingCatalog Source::GetTrackingCatalog() const
     {
-        if (!m_trackingCatalog)
+        // With C++20, consider removing the shared_ptr here and making the one inside PackageTrackingCatalog atomic.
+        std::shared_ptr<PackageTrackingCatalog> currentTrackingCatalog = std::atomic_load(&m_trackingCatalog);
+        if (!currentTrackingCatalog)
         {
-            m_trackingCatalog = PackageTrackingCatalog::CreateForSource(*this);
+            std::shared_ptr<PackageTrackingCatalog> newTrackingCatalog = std::make_shared<PackageTrackingCatalog>(PackageTrackingCatalog::CreateForSource(*this));
+
+            if (std::atomic_compare_exchange_strong(&m_trackingCatalog, &currentTrackingCatalog, newTrackingCatalog))
+            {
+                currentTrackingCatalog = newTrackingCatalog;
+            }
         }
 
-        return m_trackingCatalog;
+        return *currentTrackingCatalog;
     }
 
     std::vector<SourceDetails> Source::GetCurrentSources()
@@ -927,6 +1043,11 @@ namespace AppInstaller::Repository
                 return true;
             }
         }
+    }
+
+    std::string_view Source::GetDefaultSourceType()
+    {
+        return ISourceFactory::GetForType("")->TypeName();
     }
 
 #ifndef AICLI_DISABLE_TEST_HOOKS

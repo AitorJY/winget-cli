@@ -38,7 +38,8 @@ namespace AppInstaller::YAML
             Parser,
             Composer,
             Writer,
-            Emitter
+            Emitter,
+            Policy,
         };
 
         // Should only be used for Memory.
@@ -156,7 +157,7 @@ namespace AppInstaller::YAML
         Node& operator[](std::string_view key);
         const Node& operator[](std::string_view key) const;
 
-        // Gets a child node from the mapping by its name case insensitive.
+        // Gets a child node from the mapping by its name case-insensitive.
         Node& GetChildNode(std::string_view key);
         const Node& GetChildNode(std::string_view key) const;
 
@@ -225,11 +226,54 @@ namespace AppInstaller::YAML
         Value,
     };
 
+    // Sets the scalar style to use for the next scalar output.
+    enum class ScalarStyle
+    {
+        Any,
+        Plain,
+        SingleQuoted,
+        DoubleQuoted,
+        Literal,
+        Folded,
+    };
+
+    // A schema header for a document.
+    struct DocumentSchemaHeader
+    {
+        DocumentSchemaHeader() = default;
+        DocumentSchemaHeader(std::string schemaHeaderString, const Mark& mark) : SchemaHeader(std::move(schemaHeaderString)), Mark(mark) {}
+
+        std::string SchemaHeader;
+        Mark Mark;
+        static constexpr std::string_view YamlLanguageServerKey = "yaml-language-server";
+    };
+
+    struct Document
+    {
+        Document() = default;
+        Document(Node root, DocumentSchemaHeader schemaHeader) : m_root(std::move(root)), m_schemaHeader(std::move(schemaHeader)) {}
+
+        const DocumentSchemaHeader& GetSchemaHeader() const { return m_schemaHeader; }
+
+        // Return r-values for move semantics
+        Node&& GetRoot() && { return std::move(m_root); }
+
+    private:
+        Node m_root;
+        DocumentSchemaHeader m_schemaHeader;
+    };
+
     // Forward declaration to allow pImpl in this Emitter.
     namespace Wrapper
     {
         struct Document;
     }
+
+    // Loads from the input; returns the root node of the first document.
+    Document LoadDocument(std::string_view input);
+    Document LoadDocument(const std::string& input);
+    Document LoadDocument(const std::filesystem::path& input);
+    Document LoadDocument(const std::filesystem::path& input, Utility::SHA256::HashBuffer& hashOut);
 
     // A YAML emitter.
     struct Emitter
@@ -250,6 +294,8 @@ namespace AppInstaller::YAML
         Emitter& operator<<(int64_t value);
         Emitter& operator<<(int value);
         Emitter& operator<<(bool value);
+
+        Emitter& operator<<(ScalarStyle style);
 
         // Gets the result of the emitter; can only be retrieved once.
         std::string str();
@@ -292,7 +338,10 @@ namespace AppInstaller::YAML
         };
 
         // If set, defines the type of the next scalar (Key or Value).
-        std::optional<InputType> m_scalarInfo;
+        std::optional<InputType> m_scalarType;
+
+        // If set, defines the style of the next scalar.
+        std::optional<ScalarStyle> m_scalarStyle;
 
         // Converts the input type to a bitmask value.
         size_t GetInputBitmask(InputType type);

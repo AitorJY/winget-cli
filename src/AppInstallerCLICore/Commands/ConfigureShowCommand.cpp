@@ -13,8 +13,10 @@ namespace AppInstaller::CLI
     {
         return {
             // Required for now, make exclusive when history implemented
-            Argument{ Execution::Args::Type::ConfigurationFile, Resource::String::ConfigurationFileArgumentDescription, ArgumentType::Positional, true },
+            Argument{ Execution::Args::Type::ConfigurationFile, Resource::String::ConfigurationFileArgumentDescription, ArgumentType::Positional },
             Argument{ Execution::Args::Type::ConfigurationModulePath, Resource::String::ConfigurationModulePath, ArgumentType::Positional },
+            Argument{ Execution::Args::Type::ConfigurationProcessorPath, Resource::String::ConfigurationProcessorPath, ArgumentType::Standard, Argument::Visibility::Help },
+            Argument{ Execution::Args::Type::ConfigurationHistoryItem, Resource::String::ConfigurationHistoryItemArgumentDescription, ArgumentType::Standard, Argument::Visibility::Help },
         };
     }
 
@@ -30,21 +32,30 @@ namespace AppInstaller::CLI
 
     Utility::LocIndView ConfigureShowCommand::HelpLink() const
     {
-        // TODO: Make this exist
         return "https://aka.ms/winget-command-configure#show"_liv;
     }
 
     void ConfigureShowCommand::ExecuteInternal(Execution::Context& context) const
     {
         context <<
+            VerifyIsFullPackage <<
             VerifyFileOrUri(Execution::Args::Type::ConfigurationFile) <<
-            CreateConfigurationProcessor <<
+            CreateConfigurationProcessorWithoutFactory <<
             OpenConfigurationSet <<
+            CreateConfigurationProcessor <<
             ShowConfigurationSet;
     }
 
     void ConfigureShowCommand::ValidateArgumentsInternal(Execution::Args& execArgs) const
     {
-        Configuration::ValidateCommonArguments(execArgs);
+        Configuration::ValidateCommonArguments(execArgs, true);
+    }
+
+    void ConfigureShowCommand::Complete(Execution::Context& context, Execution::Args::Type argType) const
+    {
+        if (argType == Execution::Args::Type::ConfigurationHistoryItem)
+        {
+            context << CompleteConfigurationHistoryItem;
+        }
     }
 }

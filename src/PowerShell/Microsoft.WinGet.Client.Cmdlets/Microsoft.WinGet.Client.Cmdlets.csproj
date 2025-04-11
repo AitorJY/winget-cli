@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- If these target frameworks are updated, make sure to also update the .psd1 and .nuspec files.-->
     <!-- Keep in sync with attributes in AssemblyInfo.cs -->
-    <CoreFramework>net6.0-windows10.0.22000.0</CoreFramework>
+    <CoreFramework>net8.0-windows10.0.26100.0</CoreFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <DesktopFramework>net48</DesktopFramework>
     <Configurations>Debug;Release;ReleaseStatic</Configurations>
@@ -35,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PowerShellStandard.Library" Version="5.1.1" PrivateAssets="all" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
@@ -47,17 +48,14 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == '$(CoreFramework)'">
-    <RuntimeIdentifier>win10</RuntimeIdentifier>
+    <RuntimeIdentifier>win</RuntimeIdentifier>
   </PropertyGroup>
-
-  <!-- This project doesn't reference it directly, but if I don't add it here it will fail with NETSDK1130 *.winmd cannot be referenced. -->
-  <ItemGroup Condition="'$(TargetFramework)' == '$(CoreFramework)'">
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.WinGet.Client.Engine\Microsoft.WinGet.Client.Engine.csproj" />
   </ItemGroup>
+
+  <Import Project="..\..\targets\ReferenceEmbeddedCsWinRTProject.targets" Condition="'$(TargetFramework)' == '$(CoreFramework)'" />
 
   <!-- This project doesn't reference CSWinRT, but specify this everywhere it will fail with NETSDK1130 and MSB3271. -->
   <PropertyGroup>
@@ -85,7 +83,7 @@
   </Target>
 
   <!-- Main binaries -->
-  <Target Name="CopyWinGetBinaries" AfterTargets="AfterBuild" Condition="'$(Platform)' != 'ARM'">
+  <Target Name="CopyWinGetBinaries" AfterTargets="AfterBuild">
     <ItemGroup>
       <ModuleWinGetFile Include="$(OutputPath)Microsoft.WinGet.Client.Cmdlets.dll" />
       <ModuleWinGetFile Include="$(OutputPath)Microsoft.WinGet.Client.Cmdlets.pdb" Condition="'$(Configuration)' == 'Debug'" />
@@ -95,7 +93,7 @@
   </Target>
 
   <!-- Direct dependencies -->
-  <Target Name="CopyDirectDependencies" AfterTargets="AfterBuild" Condition="'$(Platform)' != 'ARM'">
+  <Target Name="CopyDirectDependencies" AfterTargets="AfterBuild">
     <ItemGroup>
       <ModuleDirectDependency Include="$(OutputPath)Microsoft.WinGet.Client.Engine.dll" />
       <ModuleDirectDependency Include="$(OutputPath)Microsoft.WinGet.Client.Engine.pdb" Condition="'$(Configuration)' == 'Debug'" />
@@ -105,13 +103,11 @@
   </Target>
 
   <!-- Shared managed dependencies -->
-  <Target Name="CopyManagedDependencies" AfterTargets="AfterBuild" Condition="'$(Platform)' != 'ARM'">
+  <Target Name="CopyManagedDependencies" AfterTargets="AfterBuild">
     <ItemGroup>
       <ManagedDependency Include="$(OutputPath)Newtonsoft.Json.dll" />
       <ManagedDependency Include="$(OutputPath)Octokit.dll" />
       <ManagedDependency Include="$(OutputPath)Microsoft.WinGet.SharedLib.dll" />
-      <ManagedDependency Include="$(OutputPath)Microsoft.Windows.SDK.NET.dll" Condition="'$(TargetFramework)' == '$(CoreFramework)'" />
-      <ManagedDependency Include="$(OutputPath)WinRT.Runtime.dll" Condition="'$(TargetFramework)' == '$(CoreFramework)'" />
       <ManagedDependency Include="$(OutputPath)Microsoft.Win32.Registry.dll" Condition="'$(TargetFramework)' == '$(DesktopFramework)'" />
       <ManagedDependency Include="$(OutputPath)Semver.dll" />
     </ItemGroup>
@@ -120,4 +116,3 @@
   </Target>
 
 </Project>
-

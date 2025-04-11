@@ -14,12 +14,12 @@ namespace winrt::Microsoft::Management::Configuration::implementation
 {
     Configuration::ConfigurationUnit ConfigurationStaticFunctions::CreateConfigurationUnit()
     {
-        return *make_self<wil::details::module_count_wrapper<implementation::ConfigurationUnit>>();
+        return *make_self<implementation::ConfigurationUnit>();
     }
 
     Configuration::ConfigurationSet ConfigurationStaticFunctions::CreateConfigurationSet()
     {
-        return *make_self<wil::details::module_count_wrapper<implementation::ConfigurationSet>>();
+        return *make_self<implementation::ConfigurationSet>();
     }
 
     Windows::Foundation::IAsyncOperation<IConfigurationSetProcessorFactory> ConfigurationStaticFunctions::CreateConfigurationSetProcessorFactoryAsync(hstring const& handler)
@@ -39,7 +39,6 @@ namespace winrt::Microsoft::Management::Configuration::implementation
     {
         auto result = make_self<wil::details::module_count_wrapper<implementation::ConfigurationProcessor>>();
         result->ConfigurationSetProcessorFactory(factory);
-        result->SetSupportsSchema03(WI_IsFlagSet(m_state, AppInstaller::WinRT::ConfigurationStaticsInternalsStateFlags::Configuration03));
         return *result;
     }
 

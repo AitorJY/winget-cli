@@ -3,7 +3,8 @@
 #pragma once
 #include <AppInstallerArchitecture.h>
 #include <AppInstallerStrings.h>
-#include <winget\ManifestCommon.h>
+#include <winget/Authentication.h>
+#include <winget/ManifestCommon.h>
 
 #include <map>
 #include <string>
@@ -115,5 +116,9 @@ namespace AppInstaller::Manifest
         InstallationMetadataInfo InstallationMetadata;
 
         bool DownloadCommandProhibited = false;
+
+        bool ArchiveBinariesDependOnPath = false;
+
+        Authentication::AuthenticationInfo AuthInfo;
     };
 }

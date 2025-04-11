@@ -558,7 +558,7 @@ namespace TestCommon
 
         context.Override({ DownloadInstallerFile, [](TestContext& context)
         {
-            context.Add<Data::HashPair>({ {}, {} });
+            context.Add<Data::DownloadHashInfo>({ {}, {} });
             context.Add<Data::InstallerPath>(TestDataFile("AppInstallerTestExeInstaller.exe"));
         }, expectedUseCount });
 
@@ -573,7 +573,7 @@ namespace TestCommon
     {
         context.Override({ DownloadInstallerFile, [&installationLog](TestContext& context)
         {
-            context.Add<Data::HashPair>({ {}, {} });
+            context.Add<Data::DownloadHashInfo>({ {}, {} });
             context.Add<Data::InstallerPath>(TestDataFile("AppInstallerTestExeInstaller.exe"));
 
             auto dependency = Dependency(DependencyType::Package, context.Get<Execution::Data::Manifest>().Id, context.Get<Execution::Data::Manifest>().Version);
@@ -602,7 +602,7 @@ namespace TestCommon
     {
         context.Override({ DownloadInstallerFile, [](TestContext& context)
         {
-            context.Add<Data::HashPair>({ {}, {} });
+            context.Add<Data::DownloadHashInfo>({ {}, {} });
             context.Add<Data::InstallerPath>(TestDataFile("AppInstallerTestExeInstaller.exe"));
         } });
 
@@ -626,7 +626,7 @@ namespace TestCommon
 
             std::ifstream inStream{ tempInstallerPath, std::ifstream::binary };
             SHA256::HashBuffer fileHash = SHA256::ComputeHash(inStream);
-            context.Add<Data::HashPair>({ fileHash, fileHash });
+            context.Add<Data::DownloadHashInfo>({ fileHash, DownloadResult{ fileHash } });
         } });
 
         context.Override({ RenameDownloadedInstaller, [](TestContext&)
@@ -720,6 +720,19 @@ namespace TestCommon
     {
         context.Override({ "RegisterStartupAfterReboot", [](TestContext&)
         {
+        } });
+    }
+
+    void OverrideDownloadInstallerFileForMSStoreDownload(TestContext& context)
+    {
+        context.Override({ DownloadInstallerFile, [](TestContext& context)
+        {
+            const auto& installer = context.Get<Data::Installer>().value();
+            const auto& installerPath = context.Get<Data::InstallerPath>();
+            std::ofstream file(installerPath, std::ofstream::out | std::ofstream::trunc);
+            file << installer.Url;
+            file.close();
+            context.Add<Data::DownloadHashInfo>({ {}, {} });
         } });
     }
 }

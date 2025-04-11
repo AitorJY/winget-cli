@@ -125,6 +125,24 @@ extern "C"
     WINGET_UTIL_API WinGetSQLiteIndexClose(
         WINGET_SQLITE_INDEX_HANDLE index);
 
+    // Migrates the index to the new version specified.
+    WINGET_UTIL_API WinGetSQLiteIndexMigrate(
+        WINGET_SQLITE_INDEX_HANDLE index,
+        UINT32 majorVersion,
+        UINT32 minorVersion);
+
+    enum WinGetSQLiteIndexProperty
+    {
+        WinGetSQLiteIndexProperty_PackageUpdateTrackingBaseTime = 0,
+        WinGetSQLiteIndexProperty_IntermediateFileOutputPath = 1,
+    };
+
+    // Sets the given property on the index.
+    WINGET_UTIL_API WinGetSQLiteIndexSetProperty(
+        WINGET_SQLITE_INDEX_HANDLE index,
+        WinGetSQLiteIndexProperty property,
+        WINGET_STRING value);
+
     // Adds the manifest at the repository relative path to the index.
     // If the function succeeds, the manifest has been added.
     WINGET_UTIL_API WinGetSQLiteIndexAddManifest(
@@ -137,6 +155,14 @@ extern "C"
     WINGET_UTIL_API WinGetSQLiteIndexUpdateManifest(
         WINGET_SQLITE_INDEX_HANDLE index, 
         WINGET_STRING manifestPath, 
+        WINGET_STRING relativePath,
+        BOOL* indexModified);
+
+    // Adds or Updates the manifest with matching { Id, Version, Channel } in the index.
+    // The return value indicates whether the manifest was added (true) or updated (false).
+    WINGET_UTIL_API WinGetSQLiteIndexAddOrUpdateManifest(
+        WINGET_SQLITE_INDEX_HANDLE index,
+        WINGET_STRING manifestPath,
         WINGET_STRING relativePath,
         BOOL* indexModified);
 

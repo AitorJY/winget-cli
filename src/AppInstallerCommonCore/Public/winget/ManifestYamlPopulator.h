@@ -8,7 +8,7 @@
 namespace AppInstaller::Manifest
 {
     // Add here new manifest pointer types.
-    using VariantManifestPtr = std::variant<Agreement*, AppsAndFeaturesEntry*, Dependency*, DependencyList*, Documentation*, ExpectedReturnCode*, Icon*, InstallationMetadataInfo*, InstalledFile*, Manifest*, ManifestInstaller*, ManifestLocalization*, MarketsInfo*, NestedInstallerFile*, std::map<InstallerSwitchType, Utility::NormalizedString>*>;
+    using VariantManifestPtr = std::variant<Agreement*, AppsAndFeaturesEntry*, Dependency*, DependencyList*, Documentation*, ExpectedReturnCode*, Icon*, InstallationMetadataInfo*, InstalledFile*, Manifest*, ManifestInstaller*, ManifestLocalization*, MarketsInfo*, NestedInstallerFile*, std::map<InstallerSwitchType, Utility::NormalizedString>*, AppInstaller::Authentication::AuthenticationInfo*, AppInstaller::Authentication::MicrosoftEntraIdAuthenticationInfo*>;
 
     struct ManifestYamlPopulator
     {
@@ -55,6 +55,8 @@ namespace AppInstaller::Manifest
         std::vector<FieldProcessInfo> NestedInstallerFileFieldInfos;
         std::vector<FieldProcessInfo> InstallationMetadataFieldInfos;
         std::vector<FieldProcessInfo> InstallationMetadataFilesFieldInfos;
+        std::vector<FieldProcessInfo> AuthenticationFieldInfos;
+        std::vector<FieldProcessInfo> MicrosoftEntraIdAuthenticationInfoFieldInfos;
 
         // Cache of Installers node and Localization node
         YAML::Node const* m_p_installersNode = nullptr;
@@ -75,13 +77,15 @@ namespace AppInstaller::Manifest
         std::vector<FieldProcessInfo> GetNestedInstallerFileFieldProcessInfo();
         std::vector<FieldProcessInfo> GetInstallationMetadataFieldProcessInfo();
         std::vector<FieldProcessInfo> GetInstallationMetadataFilesFieldProcessInfo();
+        std::vector<FieldProcessInfo> GetAuthenticationFieldInfos();
+        std::vector<FieldProcessInfo> GetMicrosoftEntraIdAuthenticationInfoFieldInfos();
 
         // Shadow
         std::vector<FieldProcessInfo> GetShadowRootFieldProcessInfo();
         std::vector<FieldProcessInfo> GetShadowLocalizationFieldProcessInfo();
 
         // This method takes YAML root node and list of manifest field info.
-        // Yaml lib does not support case insensitive search and it allows duplicate keys. If duplicate keys exist,
+        // Yaml lib does not support case-insensitive search and it allows duplicate keys. If duplicate keys exist,
         // the value is undefined. So in this method, we will iterate through the node map and process each individual
         // pair ourselves. This also helps with generating aggregated error rather than throwing on first failure.
         std::vector<ValidationError> ValidateAndProcessFields(

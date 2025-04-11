@@ -3,6 +3,7 @@
 #include "pch.h"
 #include "Command.h"
 #include "Resources.h"
+#include "Sixel.h"
 #include <winget/UserSettings.h>
 #include <AppInstallerRuntime.h>
 #include <winget/Locale.h>
@@ -15,7 +16,24 @@ using namespace AppInstaller::Settings;
 
 namespace AppInstaller::CLI
 {
-    constexpr Utility::LocIndView s_Command_ArgName_SilentAndInteractive = "silent|interactive"_liv;
+    namespace
+    {
+        constexpr Utility::LocIndView s_Command_ArgName_SilentAndInteractive = "silent|interactive"_liv;
+
+        void LaunchLogsIfRequested(Execution::Context& context)
+        {
+            try
+            {
+                if (context.Args.Contains(Execution::Args::Type::OpenLogs))
+                {
+                    // TODO: Consider possibly adding functionality that if the context contains 'Execution::Args::Type::Log' to open the path provided for the log
+                    // The above was omitted initially as a security precaution to ensure that user input to '--log' wouldn't be passed directly to ShellExecute
+                    ShellExecute(NULL, NULL, Runtime::GetPathTo(Runtime::PathName::DefaultLogLocation).wstring().c_str(), NULL, NULL, SW_SHOWNORMAL);
+                }
+            }
+            CATCH_LOG();
+        }
+    }
 
     Command::Command(
         std::string_view name,
@@ -42,8 +60,39 @@ namespace AppInstaller::CLI
 
     void Command::OutputIntroHeader(Execution::Reporter& reporter) const
     {
+        auto infoOut = reporter.Info();
+        VirtualTerminal::ConstructedSequence indent;
+
+        if (reporter.SixelsEnabled())
+        {
+            try
+            {
+                std::filesystem::path imagePath = Runtime::GetPathTo(Runtime::PathName::ImageAssets);
+
+                if (!imagePath.empty())
+                {
+                    // This image matches the target pixel size. If changing the target size, choose the most appropriate image.
+                    imagePath /= "AppList.targetsize-40.png";
+
+                    VirtualTerminal::Sixel::Image wingetIcon{ imagePath };
+
+                    // Using a height of 2 to match the two lines of header.
+                    UINT imageHeightCells = 2;
+                    UINT imageWidthCells = 2 * imageHeightCells;
+
+                    wingetIcon.RenderSizeInCells(imageWidthCells, imageHeightCells);
+                    wingetIcon.RenderTo(infoOut);
+
+                    indent = VirtualTerminal::Cursor::Position::Forward(static_cast<int16_t>(imageWidthCells));
+                    infoOut << VirtualTerminal::Cursor::Position::Up(static_cast<int16_t>(imageHeightCells) - 1);
+                }
+            }
+            CATCH_LOG();
+        }
+
         auto productName = Runtime::IsReleaseBuild() ? Resource::String::WindowsPackageManager : Resource::String::WindowsPackageManagerPreview;
-        reporter.Info() << productName(Runtime::GetClientVersion()) << std::endl << Resource::String::MainCopyrightNotice << std::endl;
+        infoOut << indent << productName(Runtime::GetClientVersion()) << std::endl
+            << indent << Resource::String::MainCopyrightNotice << std::endl;
     }
 
     void Command::OutputHelp(Execution::Reporter& reporter, const CommandException* exception) const
@@ -706,6 +755,22 @@ namespace AppInstaller::CLI
             }
         }
 
+        if (execArgs.Contains(Execution::Args::Type::InstallerArchitecture))
+        {
+            Utility::Architecture selectedArch = Utility::ConvertToArchitectureEnum(std::string(execArgs.GetArg(Execution::Args::Type::InstallerArchitecture)));
+            if (selectedArch == Utility::Architecture::Unknown)
+            {
+                std::vector<Utility::LocIndString> applicableArchitectures;
+                for (Utility::Architecture i : Utility::GetAllArchitectures())
+                {
+                    applicableArchitectures.emplace_back(Utility::ToString(i));
+                }
+
+                auto validOptions = Utility::Join(", "_liv, applicableArchitectures);
+                throw CommandException(Resource::String::InvalidArgumentValueError(Argument::ForType(Execution::Args::Type::InstallerArchitecture).Name(), validOptions));
+            }
+        }
+
         if (execArgs.Contains(Execution::Args::Type::Locale))
         {
             if (!Locale::IsWellFormedBcp47Tag(execArgs.GetArg(Execution::Args::Type::Locale)))
@@ -904,12 +969,7 @@ namespace AppInstaller::CLI
         }
         else
         {
-            if (context.Args.Contains(Execution::Args::Type::OpenLogs))
-            {
-                // TODO: Consider possibly adding functionality that if the context contains 'Execution::Args::Type::Log' to open the path provided for the log
-                // The above was omitted initially as a security precaution to ensure that user input to '--log' wouldn't be passed directly to ShellExecute
-                ShellExecute(NULL, NULL, Runtime::GetPathTo(Runtime::PathName::DefaultLogLocation).wstring().c_str(), NULL, NULL, SW_SHOWNORMAL);
-            }
+            LaunchLogsIfRequested(context);
 
             if (context.Args.Contains(Execution::Args::Type::Wait))
             {
@@ -998,6 +1058,8 @@ namespace AppInstaller::CLI
         catch (...)
         {
             context.SetTerminationHR(Workflow::HandleException(context, std::current_exception()));
+
+            LaunchLogsIfRequested(context);
         }
     }
 

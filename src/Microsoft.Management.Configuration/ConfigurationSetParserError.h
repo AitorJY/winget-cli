@@ -22,5 +22,10 @@ namespace winrt::Microsoft::Management::Configuration::implementation
         void Parse() override {}
 
         hstring GetSchemaVersion() override { return {}; }
+
+        void ExtractEnvironmentFromMetadata(Windows::Foundation::Collections::ValueSet, implementation::ConfigurationEnvironment&) override {}
+
+    protected:
+        void SetDocument(AppInstaller::YAML::Node&&) override {}
     };
 }

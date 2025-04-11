@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #pragma once
+#include <AppInstallerDownloader.h>
 #include <winget/RepositorySource.h>
 #include <winget/Manifest.h>
 #include <winget/ARPCorrelation.h>
+#include <winget/Authentication.h>
 #include <winget/Pin.h>
 #include <winget/PinningData.h>
 #include "CompletionData.h"
@@ -34,7 +36,7 @@ namespace AppInstaller::CLI::Execution
         Manifest,
         PackageVersion,
         Installer,
-        HashPair,
+        DownloadHashInfo,
         InstallerPath,
         LogPath,
         InstallerArgs,
@@ -65,6 +67,8 @@ namespace AppInstaller::CLI::Execution
         DownloadDirectory,
         ModifyPath,
         RepairString,
+        MsixDigests,
+        InstallerDownloadAuthenticators,
         Max
     };
 
@@ -127,9 +131,9 @@ namespace AppInstaller::CLI::Execution
         };
 
         template <>
-        struct DataMapping<Data::HashPair>
+        struct DataMapping<Data::DownloadHashInfo>
         {
-            using value_t = std::pair<std::vector<uint8_t>, std::vector<uint8_t>>;
+            using value_t = std::pair<std::vector<uint8_t>, Utility::DownloadResult>;
         };
 
         template <>
@@ -276,11 +280,24 @@ namespace AppInstaller::CLI::Execution
             using value_t = std::string;
         };
 
-
         template<>
         struct DataMapping<Data::RepairString>
         {
             using value_t = std::string;
+        };
+
+        template<>
+        struct DataMapping<Data::MsixDigests>
+        {
+            // The pair is { URL, Digest }
+            using value_t = std::vector<std::pair<std::string, std::wstring>>;
+        };
+
+        template<>
+        struct DataMapping<Data::InstallerDownloadAuthenticators>
+        {
+            // The authenticator map shared with sub contexts
+            using value_t = std::shared_ptr<std::map<Authentication::AuthenticationInfo, Authentication::Authenticator>>;
         };
     }
 }

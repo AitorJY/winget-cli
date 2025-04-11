@@ -26,24 +26,32 @@ namespace AppInstaller::Settings
     InstallerDownloader NetworkSettings::GetInstallerDownloader() const
     {
         // The default is DeliveryOptimization.
-        // We only use WinINet if specified by settings, or if we want to use proxy (as DO does not support that)
+        // We use WinINet if specified by settings, or if we want to use proxy (as DO does not support that)
         InstallerDownloader setting = User().Get<Setting::NetworkDownloader>();
 
-        if (setting != InstallerDownloader::WinInet && m_proxyUri)
+        if (m_proxyUri && setting != InstallerDownloader::WinInet)
         {
             AICLI_LOG(Core, Info, << "Forcing use of wininet for download as DO does not support proxy");
             return InstallerDownloader::WinInet;
         }
-        else // Default or DO
+        else if (setting == InstallerDownloader::Default)
         {
             return InstallerDownloader::DeliveryOptimization;
+        }
+        else
+        {
+            return setting;
         }
     }
 
     NetworkSettings::NetworkSettings()
     {
         // Get the default proxy
-        m_proxyUri = GetAdminSetting(StringAdminSetting::DefaultProxy);
+        try
+        {
+            m_proxyUri = GetAdminSetting(StringAdminSetting::DefaultProxy);
+        }
+        CATCH_LOG()
         AICLI_LOG(Core, Info, << "Default proxy is " << (m_proxyUri ? m_proxyUri.value() : "not set"));
     }
 

@@ -3,6 +3,7 @@
 #pragma once
 #include "winget/PortableARPEntry.h"
 #include "winget/PortableFileEntry.h"
+#include <Workflows/WorkflowBase.h>
 #include <filesystem>
 
 using namespace AppInstaller::Registry::Portable;
@@ -32,6 +33,7 @@ namespace AppInstaller::CLI::Portable
         std::string WinGetPackageIdentifier;
         std::string WinGetSourceIdentifier;
         bool InstallDirectoryCreated = false;
+        bool BinariesDependOnPath = false;
         // If we fail to create a symlink, add install directory to PATH variable
         bool InstallDirectoryAddedToPath = false;
 
@@ -57,7 +59,7 @@ namespace AppInstaller::CLI::Portable
             m_desiredEntries = {};
         }
 
-        void Install();
+        void Install( AppInstaller::CLI::Workflow::OperationType operation );
 
         void Uninstall();
 

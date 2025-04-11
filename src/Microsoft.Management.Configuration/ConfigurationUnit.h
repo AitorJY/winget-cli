@@ -2,18 +2,22 @@
 // Licensed under the MIT License.
 #pragma once
 #include "ConfigurationUnit.g.h"
+#include "ConfigurationEnvironment.h"
 #include <winget/ILifetimeWatcher.h>
+#include <winget/ModuleCountBase.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <vector>
 
 namespace winrt::Microsoft::Management::Configuration::implementation
 {
-    struct ConfigurationUnit : ConfigurationUnitT<ConfigurationUnit, winrt::cloaked<AppInstaller::WinRT::ILifetimeWatcher>>, AppInstaller::WinRT::LifetimeWatcherBase
+    struct ConfigurationUnit : ConfigurationUnitT<ConfigurationUnit, winrt::cloaked<AppInstaller::WinRT::ILifetimeWatcher>>, AppInstaller::WinRT::LifetimeWatcherBase, AppInstaller::WinRT::ModuleCountBase
     {
         ConfigurationUnit();
 
 #if !defined(INCLUDE_ONLY_INTERFACE_METHODS)
         ConfigurationUnit(const guid& instanceIdentifier);
+
+        implementation::ConfigurationEnvironment& EnvironmentInternal();
 #endif
 
         hstring Type();
@@ -53,11 +57,13 @@ namespace winrt::Microsoft::Management::Configuration::implementation
         Windows::Foundation::Collections::IVector<Configuration::ConfigurationUnit> Units();
         void Units(const Windows::Foundation::Collections::IVector<Configuration::ConfigurationUnit>& value);
 
+        Configuration::ConfigurationEnvironment Environment();
+
         HRESULT STDMETHODCALLTYPE SetLifetimeWatcher(IUnknown* watcher);
 
 #if !defined(INCLUDE_ONLY_INTERFACE_METHODS)
         void Dependencies(std::vector<hstring>&& value);
-        void Details(IConfigurationUnitProcessorDetails&& details);
+        void Details(IConfigurationUnitProcessorDetails details);
         void Units(std::vector<Configuration::ConfigurationUnit>&& value);
 
     private:
@@ -72,6 +78,7 @@ namespace winrt::Microsoft::Management::Configuration::implementation
         bool m_isActive = true;
         bool m_isGroup = false;
         Windows::Foundation::Collections::IVector<Configuration::ConfigurationUnit> m_units = nullptr;
+        com_ptr<implementation::ConfigurationEnvironment> m_environment{ make_self<implementation::ConfigurationEnvironment>() };
 #endif
     };
 }

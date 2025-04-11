@@ -4,6 +4,7 @@
 #include "ConfigurationUnit.h"
 #include "ConfigurationUnit.g.cpp"
 #include "ConfigurationSetParser.h"
+#include "ConfigurationStatus.h"
 
 namespace winrt::Microsoft::Management::Configuration::implementation
 {
@@ -130,19 +131,21 @@ namespace winrt::Microsoft::Management::Configuration::implementation
         return m_details;
     }
 
-    void ConfigurationUnit::Details(IConfigurationUnitProcessorDetails&& details)
+    void ConfigurationUnit::Details(IConfigurationUnitProcessorDetails details)
     {
         m_details = std::move(details);
     }
 
     ConfigurationUnitState ConfigurationUnit::State()
     {
-        return ConfigurationUnitState::Unknown;
+        auto status = ConfigurationStatus::Instance();
+        return status->GetUnitState(m_instanceIdentifier);
     }
 
     IConfigurationUnitResultInformation ConfigurationUnit::ResultInformation()
     {
-        return nullptr;
+        auto status = ConfigurationStatus::Instance();
+        return status->GetUnitResultInformation(m_instanceIdentifier);
     }
 
     bool ConfigurationUnit::IsActive()
@@ -157,7 +160,7 @@ namespace winrt::Microsoft::Management::Configuration::implementation
 
     Configuration::ConfigurationUnit ConfigurationUnit::Copy()
     {
-        auto result = make_self<wil::details::module_count_wrapper<ConfigurationUnit>>();
+        auto result = make_self<ConfigurationUnit>();
 
         result->m_type = m_type;
         result->m_intent = m_intent;
@@ -165,6 +168,7 @@ namespace winrt::Microsoft::Management::Configuration::implementation
         result->m_metadata = Clone(m_metadata);
         result->m_settings = Clone(m_settings);
         result->m_details = m_details;
+        result->m_environment = make_self<implementation::ConfigurationEnvironment>(*m_environment);
 
         return *result;
     }
@@ -209,6 +213,16 @@ namespace winrt::Microsoft::Management::Configuration::implementation
     void ConfigurationUnit::Units(std::vector<Configuration::ConfigurationUnit>&& value)
     {
         m_units = winrt::multi_threaded_vector<Configuration::ConfigurationUnit>(std::move(value));
+    }
+
+    Configuration::ConfigurationEnvironment ConfigurationUnit::Environment()
+    {
+        return *m_environment;
+    }
+
+    implementation::ConfigurationEnvironment& ConfigurationUnit::EnvironmentInternal()
+    {
+        return *m_environment;
     }
 
     HRESULT STDMETHODCALLTYPE ConfigurationUnit::SetLifetimeWatcher(IUnknown* watcher)

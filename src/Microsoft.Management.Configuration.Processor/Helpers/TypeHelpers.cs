@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="TypeHelpers.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -6,8 +6,13 @@
 
 namespace Microsoft.Management.Configuration.Processor.Helpers
 {
+    using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
+    using Microsoft.Management.Configuration.Processor.Exceptions;
+    using Microsoft.Management.Configuration.Processor.Extensions;
+    using Microsoft.Management.Configuration.SetProcessorFactory;
     using Windows.Foundation.Collections;
 
     /// <summary>
@@ -74,18 +79,150 @@ namespace Microsoft.Management.Configuration.Processor.Helpers
             var result = new ValueSet();
             foreach (PropertyInfo property in obj.GetType().GetProperties())
             {
-                // Specialize here.
-                if (property.PropertyType.IsEnum)
-                {
-                    result.Add(property.Name, property.GetValue(obj)?.ToString());
-                }
-                else
-                {
-                    result.Add(property.Name, property.GetValue(obj));
-                }
+                var key = property.Name;
+                var value = GetCompatibleValueSetValueOfProperty(property.PropertyType, property.GetValue(obj));
+                result.Add(key, value);
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Gets a compatible type for a ValueSet value.
+        /// </summary>
+        /// <param name="type">Type.</param>
+        /// <param name="value">Value.</param>
+        /// <returns>Value converted to a compatible type.</returns>
+        public static object? GetCompatibleValueSetValueOfProperty(Type type, object? value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            // Specialize here.
+            if (type.IsEnum)
+            {
+                return value.ToString();
+            }
+            else if (type == typeof(Hashtable))
+            {
+                Hashtable hashtable = (Hashtable)value;
+                return hashtable.ToValueSet();
+            }
+            else if (type.IsArray)
+            {
+                var valueSetArray = new ValueSet();
+                int index = 0;
+                foreach (object arrayObj in (Array)value)
+                {
+                    var arrayValue = GetCompatibleValueSetValueOfProperty(arrayObj.GetType(), arrayObj);
+                    if (arrayValue != null)
+                    {
+                        valueSetArray.Add(index.ToString(), arrayValue);
+                        index++;
+                    }
+                }
+
+                if (valueSetArray.Count > 0)
+                {
+                    valueSetArray.Add("treatAsArray", true);
+                }
+
+                return valueSetArray;
+            }
+            else if (type == typeof(string))
+            {
+                // Ignore empty strings.
+                string propertyString = (string)value;
+                if (!string.IsNullOrEmpty(propertyString))
+                {
+                    return propertyString;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (type.IsValueType)
+            {
+                return value;
+            }
+
+            // This might be too restrictive but anything else is going to be some object that we don't support anyway.
+            throw new UnitPropertyUnsupportedException(value.GetType());
+        }
+
+        /// <summary>
+        /// Converts PowerShellConfigurationProcessorPolicy string value to PwshConfigurationProcessorPolicy.
+        /// </summary>
+        /// <param name="value">PowerShellConfigurationProcessorPolicy value.</param>
+        /// <returns>PwshConfigurationProcessorPolicy.</returns>
+        public static PwshConfigurationProcessorPolicy ToPwshConfigurationProcessorPolicy(PowerShellConfigurationProcessorPolicy value)
+        {
+            return value switch
+            {
+                PowerShellConfigurationProcessorPolicy.Unrestricted => PwshConfigurationProcessorPolicy.Unrestricted,
+                PowerShellConfigurationProcessorPolicy.RemoteSigned => PwshConfigurationProcessorPolicy.RemoteSigned,
+                PowerShellConfigurationProcessorPolicy.AllSigned => PwshConfigurationProcessorPolicy.AllSigned,
+                PowerShellConfigurationProcessorPolicy.Restricted => PwshConfigurationProcessorPolicy.Restricted,
+                PowerShellConfigurationProcessorPolicy.Bypass => PwshConfigurationProcessorPolicy.Bypass,
+                PowerShellConfigurationProcessorPolicy.Undefined => PwshConfigurationProcessorPolicy.Undefined,
+                _ => throw new InvalidOperationException(),
+            };
+        }
+
+        /// <summary>
+        /// Converts PwshConfigurationProcessorPolicy string value to PowerShellConfigurationProcessorPolicy.
+        /// </summary>
+        /// <param name="value">PwshConfigurationProcessorPolicy value.</param>
+        /// <returns>PowerShellConfigurationProcessorPolicy.</returns>
+        public static PowerShellConfigurationProcessorPolicy ToPowerShellConfigurationProcessorPolicy(PwshConfigurationProcessorPolicy value)
+        {
+            return value switch
+            {
+                PwshConfigurationProcessorPolicy.Unrestricted => PowerShellConfigurationProcessorPolicy.Unrestricted,
+                PwshConfigurationProcessorPolicy.RemoteSigned => PowerShellConfigurationProcessorPolicy.RemoteSigned,
+                PwshConfigurationProcessorPolicy.AllSigned => PowerShellConfigurationProcessorPolicy.AllSigned,
+                PwshConfigurationProcessorPolicy.Restricted => PowerShellConfigurationProcessorPolicy.Restricted,
+                PwshConfigurationProcessorPolicy.Bypass => PowerShellConfigurationProcessorPolicy.Bypass,
+                PwshConfigurationProcessorPolicy.Undefined => PowerShellConfigurationProcessorPolicy.Undefined,
+                _ => throw new InvalidOperationException(),
+            };
+        }
+
+        /// <summary>
+        /// Converts PowerShellConfigurationProcessorLocation string value to PwshConfigurationProcessorLocation.
+        /// </summary>
+        /// <param name="value">PowerShellConfigurationProcessorLocation value.</param>
+        /// <returns>PwshConfigurationProcessorLocation.</returns>
+        public static PwshConfigurationProcessorLocation ToPwshConfigurationProcessorLocation(PowerShellConfigurationProcessorLocation value)
+        {
+            return value switch
+            {
+                PowerShellConfigurationProcessorLocation.CurrentUser => PwshConfigurationProcessorLocation.CurrentUser,
+                PowerShellConfigurationProcessorLocation.AllUsers => PwshConfigurationProcessorLocation.AllUsers,
+                PowerShellConfigurationProcessorLocation.WinGetModulePath => PwshConfigurationProcessorLocation.WinGetModulePath,
+                PowerShellConfigurationProcessorLocation.Custom => PwshConfigurationProcessorLocation.Custom,
+                _ => throw new InvalidOperationException(),
+            };
+        }
+
+        /// <summary>
+        /// Converts PwshConfigurationProcessorLocation string value to PowerShellConfigurationProcessorLocation.
+        /// </summary>
+        /// <param name="value">PwshConfigurationProcessorLocation value.</param>
+        /// <returns>PowerShellConfigurationProcessorLocation.</returns>
+        public static PowerShellConfigurationProcessorLocation ToPowerShellConfigurationProcessorLocation(PwshConfigurationProcessorLocation value)
+        {
+            return value switch
+            {
+                PwshConfigurationProcessorLocation.CurrentUser => PowerShellConfigurationProcessorLocation.CurrentUser,
+                PwshConfigurationProcessorLocation.AllUsers => PowerShellConfigurationProcessorLocation.AllUsers,
+                PwshConfigurationProcessorLocation.WinGetModulePath => PowerShellConfigurationProcessorLocation.WinGetModulePath,
+                PwshConfigurationProcessorLocation.Custom => PowerShellConfigurationProcessorLocation.Custom,
+                _ => throw new InvalidOperationException(),
+            };
         }
     }
 }

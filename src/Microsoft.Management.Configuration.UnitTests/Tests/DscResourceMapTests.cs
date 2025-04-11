@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="DscResourceMapTests.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -8,9 +8,10 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
 {
     using System;
     using System.Collections.Generic;
-    using Microsoft.Management.Configuration.Processor.DscResourcesInfo;
-    using Microsoft.Management.Configuration.Processor.Helpers;
+    using Microsoft.Management.Configuration.Processor.PowerShell.DscResourcesInfo;
+    using Microsoft.Management.Configuration.Processor.PowerShell.Helpers;
     using Microsoft.Management.Configuration.UnitTests.Fixtures;
+    using Microsoft.Management.Configuration.UnitTests.Helpers;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -18,6 +19,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     /// DscResourceMap tests.
     /// </summary>
     [Collection("UnitTestCollection")]
+    [InProc]
     public class DscResourceMapTests
     {
         private const string ResourceZoro = "xResourceZoro";

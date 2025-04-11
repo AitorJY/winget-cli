@@ -21,10 +21,10 @@
         "clang_rt.asan_dynamic*.dll"
       ],
       "AdoTemplate": {
-        "Org": "ms",
-        "Project": "winget-cli",
+        "Org": "microsoft",
+        "Project": "OS",
         "AssignedTo": "ryfu@microsoft.com",
-        "AreaPath": "OS\\Windows Client and Services\\ADEPT\\E4D-Engineered for Developers\\InstaDev",
+        "AreaPath": "OS\\Windows Client and Services\\WinPD\\DEEP-Developer Experience, Ecosystem and Partnerships\\InstaDev",
         "IterationPath": "OS"
       },
       "codeCoverage": {

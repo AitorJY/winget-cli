@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="AssemblyInfo.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -15,7 +15,13 @@ using System.Runtime.Versioning;
 // Needed to allow us mock internal interfaces.
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
+#if WinGetCsWinRTEmbedded
+// Allow our consuming assemblies access when built embedded.
+[assembly: InternalsVisibleTo("Microsoft.WinGet.Configuration.Engine")]
+[assembly: InternalsVisibleTo("ConfigurationRemotingServer")]
+#endif
+
 // Forcibly set the target and supported platforms due to the internal build setup.
 // Keep in sync with project versions.
-[assembly: TargetPlatform("Windows10.0.19041.0")]
+[assembly: TargetPlatform("Windows10.0.26100.0")]
 [assembly: SupportedOSPlatform("Windows10.0.17763.0")]

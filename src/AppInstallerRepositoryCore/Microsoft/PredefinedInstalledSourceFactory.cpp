@@ -54,7 +54,7 @@ namespace AppInstaller::Repository::Microsoft
                 return std::nullopt;
             }
 
-            return cacheData.GetPropertyByManifestId(versionKey->ManifestId, PackageVersionProperty::Name);
+            return cacheData.GetPropertyByPrimaryId(versionKey->ManifestId, PackageVersionProperty::Name);
         }
 
         // Populates the index with the entries from MSIX.
@@ -68,14 +68,50 @@ namespace AppInstaller::Repository::Microsoft
 
             IIterable<Package> packages;
             PackageManager packageManager;
+
             if (scope == Manifest::ScopeEnum::Machine)
             {
-                packages = packageManager.FindProvisionedPackages();
+                // May not be present on our oldest supported systems; simply ignore for the time being.
+                IPackageManager9 packageManager9 = packageManager.try_as<IPackageManager9>();
+                if (packageManager9)
+                {
+                    packages = packageManager.FindProvisionedPackages();
+                }
+                else
+                {
+                    AICLI_LOG(Repo, Warning, << "FindProvisionedPackages is not available on this version of Windows");
+                }
             }
             else
             {
                 // TODO: Consider if Optional packages should also be enumerated
-                packages = packageManager.FindPackagesForUserWithPackageTypes({}, PackageTypes::Main | PackageTypes::Framework);
+                for (PackageTypes types : { PackageTypes::Main | PackageTypes::Framework, PackageTypes::Main, PackageTypes::Framework })
+                {
+                    try
+                    {
+                        packages = packageManager.FindPackagesForUserWithPackageTypes({}, types);
+                        break;
+                    }
+                    catch (const winrt::hresult_error& hre)
+                    {
+                        if (hre.code() == E_NOT_SET)
+                        {
+                            // This OS issue occurs frequently enough that we will attempt to work around it by enumerating progressively fewer packages
+                            AICLI_LOG(Repo, Warning, << "FindPackagesForUserWithPackageTypes returned E_NOT_SET for types: " << ToIntegral(types));
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                }
+            }
+
+            // Failed to retrieve even an empty package list; make sure that these cases have a log to indicate why.
+            if (!packages)
+            {
+                AICLI_LOG(Repo, Warning, << "MSIX package list not populated");
+                return;
             }
 
             // Reuse the same manifest object, as we will be setting the same values every time.
@@ -104,14 +140,7 @@ namespace AppInstaller::Repository::Microsoft
                 Utility::NormalizedString fullName = Utility::ConvertToUTF8(packageId.FullName());
                 Utility::NormalizedString familyName = Utility::ConvertToUTF8(packageId.FamilyName());
 
-                if (Settings::ExperimentalFeature::IsEnabled(Settings::ExperimentalFeature::Feature::SideBySide))
-                {
-                    manifest.Id = "MSIX\\" + fullName;
-                }
-                else
-                {
-                    manifest.Id = familyName;
-                }
+                manifest.Id = "MSIX\\" + fullName;
 
                 // Get version
                 std::ostringstream strstr;
@@ -166,34 +195,17 @@ namespace AppInstaller::Repository::Microsoft
 
                 manifest.Installers[0].PackageFamilyName = familyName;
 
-                try
+                // Use the full name as a unique key for the path
+                auto manifestId = index.AddManifest(manifest);
+
+                index.SetMetadataByManifestId(manifestId, PackageVersionMetadata::InstalledType,
+                    Manifest::InstallerTypeToString(Manifest::InstallerTypeEnum::Msix));
+
+                auto architecture = Utility::ConvertToArchitectureEnum(packageId.Architecture());
+                if (architecture)
                 {
-                    // Use the full name as a unique key for the path
-                    auto manifestId = index.AddManifest(manifest);
-
-                    index.SetMetadataByManifestId(manifestId, PackageVersionMetadata::InstalledType,
-                        Manifest::InstallerTypeToString(Manifest::InstallerTypeEnum::Msix));
-
-                    auto architecture = Utility::ConvertToArchitectureEnum(packageId.Architecture());
-                    if (architecture)
-                    {
-                        index.SetMetadataByManifestId(manifestId, PackageVersionMetadata::InstalledArchitecture,
-                            ToString(architecture.value()));
-                    }
-                }
-                catch (const wil::ResultException& resultException)
-                {
-                    if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == resultException.GetErrorCode() && package.IsFramework())
-                    {
-                        // This should not be needed with the SxS changes
-                        if (!Settings::ExperimentalFeature::IsEnabled(Settings::ExperimentalFeature::Feature::SideBySide))
-                        {
-                            // There may be multiple packages with same package family name for framework packages.
-                            continue;
-                        }
-                    }
-
-                    throw;
+                    index.SetMetadataByManifestId(manifestId, PackageVersionMetadata::InstalledArchitecture,
+                        ToString(architecture.value()));
                 }
             }
         }

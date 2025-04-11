@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // <copyright file="ConfigurationUnitInternalTests.cs" company="Microsoft Corporation">
 //     Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 // </copyright>
@@ -13,6 +13,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     using Microsoft.Management.Configuration;
     using Microsoft.Management.Configuration.Processor.Exceptions;
     using Microsoft.Management.Configuration.Processor.Helpers;
+    using Microsoft.Management.Configuration.Processor.PowerShell.Helpers;
     using Microsoft.Management.Configuration.UnitTests.Fixtures;
     using Microsoft.Management.Configuration.UnitTests.Helpers;
     using Xunit;
@@ -22,6 +23,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
     /// Tests ConfigurationUnitExtensionsTests.
     /// </summary>
     [Collection("UnitTestCollection")]
+    [InProc]
     public class ConfigurationUnitInternalTests
     {
         private readonly UnitTestFixture fixture;
@@ -66,7 +68,7 @@ namespace Microsoft.Management.Configuration.UnitTests.Tests
             unit.Metadata.Add(boolDirective, boolDirectiveValue);
             unit.Metadata.Add(boolDirective2, boolDirective2Value);
 
-            var unitInternal = new ConfigurationUnitInternal(unit, string.Empty);
+            var unitInternal = new ConfigurationUnitAndModule(unit, string.Empty);
 
             var description = unitInternal.GetDirective<string>(descriptionDirective);
             Assert.Equal(description, unitDescription);
